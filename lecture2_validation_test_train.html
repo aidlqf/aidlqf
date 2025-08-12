@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning Pipeline & Metrics</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f7f9fb;
+        color: #333;
+        line-height: 1.6;
+    }
+    header {
+        background: #005f99;
+        color: white;
+        padding: 1rem;
+        text-align: center;
+    }
+    main {
+        padding: 1rem;
+        max-width: 900px;
+        margin: auto;
+    }
+    .section {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    h2 {
+        color: #005f99;
+    }
+    .grid {
+        display: grid;
+        gap: 1rem;
+    }
+    @media (min-width: 700px) {
+        .grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    .card {
+        background: #f0f4f8;
+        padding: 1rem;
+        border-radius: 6px;
+        border-left: 5px solid #005f99;
+    }
+    ul {
+        padding-left: 1.2rem;
+    }
+    .highlight {
+        font-weight: bold;
+        color: #d9534f;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Machine Learning Pipeline & Metrics</h1>
+</header>
+
+<main>
+
+    <div class="section">
+        <h2>1. Training vs. Testing</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Training Phase</h3>
+                <ul>
+                    <li>Goal: <span class="highlight">Minimize training error</span> while avoiding overfitting.</li>
+                    <li>Model learns patterns from the data.</li>
+                    <li>Use training loss to guide optimization.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Testing (or Validation) Phase</h3>
+                <ul>
+                    <li>Goal: Measure <span class="highlight">generalization error</span>.</li>
+                    <li>Evaluate on unseen data to check performance.</li>
+                    <li>Metrics here tell if the model is truly good.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. Types of Regression</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Linear Regression</h3>
+                <ul>
+                    <li>Predicts continuous values.</li>
+                    <li>Example: Predicting house prices.</li>
+                    <li>Multiple Linear Regression → multiple predictors.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Logistic Regression</h3>
+                <ul>
+                    <li><span class="highlight">Classification task</span>, despite the name.</li>
+                    <li>Predicts probabilities for categories.</li>
+                    <li>Example: Spam vs. Not Spam.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. Common Metrics</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>For Regression (Continuous Target)</h3>
+                <ul>
+                    <li>R² → Higher is better.</li>
+                    <li>MSE / RMSE / RSS → Lower is better.</li>
+                    <li>p-values (for statistical significance).</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>For Classification (Including Logistic Regression)</h3>
+                <ul>
+                    <li>Accuracy → Higher is better.</li>
+                    <li>Precision, Recall, F1-score.</li>
+                    <li>ROC-AUC.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+</body>
+</html>
