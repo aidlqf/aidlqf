@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polynomial Regression with Residuals & MSE Calculation</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+    #plot { width: 100%; max-width: 900px; margin: auto; }
+    .slider-container { margin-top: 20px; }
+    #formula, #mse { margin-top: 20px; font-size: 18px; }
+    table { border-collapse: collapse; margin: 20px auto; font-size: 14px; }
+    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: right; }
+    th { background-color: #f2f2f2; }
+    #calc { margin-top: 20px; font-size: 16px; text-align: left; max-width: 900px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body>
+  <h2>Polynomial Regression Demo with Residuals and MSE Calculation</h2>
+  <div id="plot"></div>
+  <div class="slider-container">
+    <label for="degree">Polynomial Degree: </label>
+    <input type="range" id="degree" min="1" max="12" value="1" />
+    <span id="degree-value">1</span>
+  </div>
+  <div id="formula"></div>
+  <div id="mse"></div>
+  <div id="table-container"></div>
+  <div id="calc"></div>
+
+  <script>
+    // --- Fixed random generator (seeded) ---
+    function mulberry32(seed) {
+      return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+
+    // Generate fixed random data
+    function generateData(n=20, seed=42) {
+      let rand = mulberry32(seed);
+      let X = [], Y = [];
+      for (let i = 0; i < n; i++) {
+        let x = -3 + 6 * rand();
+        let y_true = 0.5 * x*x + x + 2;
+        let y = y_true + (rand() - 0.5) * 4; // add noise
+        X.push(x);
+        Y.push(y);
+      }
+      return {X, Y};
+    }
+
+    // Polynomial fit
+    function polyFit(X, Y, degree) {
+      let A = X.map(x => {
+        let row = [];
+        for (let d = 0; d <= degree; d++) row.push(Math.pow(x, d));
+        return row;
+      });
+
+      function transpose(m) { return m[0].map((_, i) => m.map(row => row[i])); }
+      function multiply(a, b) {
+        return a.map(row => b[0].map((_, j) => row.reduce((sum, val, k) => sum + val * b[k][j], 0)));
+      }
+      function inverse(matrix) {
+        let size = matrix.length;
+        let I = matrix.map((row, i) => row.map((_, j) => (i === j ? 1 : 0)));
+        let M = matrix.map(row => row.slice());
+        for (let i = 0; i < size; i++) {
+          let diag = M[i][i];
+          for (let j = 0; j < size; j++) {
+            M[i][j] /= diag;
+            I[i][j] /= diag;
+          }
+          for (let k = 0; k < size; k++) {
+            if (k !== i) {
+              let factor = M[k][i];
+              for (let j = 0; j < size; j++) {
+                M[k][j] -= factor * M[i][j];
+                I[k][j] -= factor * I[i][j];
+              }
+            }
+          }
+        }
+        return I;
+      }
+
+      let AT = transpose(A);
+      let ATA = multiply(AT, A);
+      let ATY = multiply(AT, Y.map(y => [y]));
+      let w = multiply(inverse(ATA), ATY).map(row => row[0]);
+      return w;
+    }
+
+    // Predict
+    function predict(X, coeffs) {
+      return X.map(x => coeffs.reduce((sum, c, d) => sum + c * Math.pow(x, d), 0));
+    }
+
+    // Format formula
+    function formatFormula(coeffs) {
+      let terms = coeffs.map((c, d) => {
+        let coef = c.toFixed(2);
+        if (d === 0) return `${coef}`;
+        if (d === 1) return `${coef}x`;
+        return `${coef}x^{${d}}`;
+      });
+      return "y = " + terms.join(" + ");
+    }
+
+    // --- Fixed dataset ---
+    const data = generateData(20, 12345);
+
+    // Draw plot + residual calculation
+    function updatePlot(degree) {
+      let coeffs = polyFit(data.X, data.Y, degree);
+      let Y_pred = predict(data.X, coeffs);
+
+      // Errors & MSE
+      let errors = data.Y.map((val, i) => val - Y_pred[i]);
+      let sqErrors = errors.map(e => e*e);
+      let SSE = sqErrors.reduce((a,b)=>a+b,0);
+      let MSE = SSE / data.X.length;
+
+      // Regression curve
+      let X_curve = [];
+      for (let i = -3; i <= 3; i+=0.1) X_curve.push(i);
+      let Y_curve = predict(X_curve, coeffs);
+
+      // Plot elements
+      let scatter = { x: data.X, y: data.Y, mode: "markers", name: "Data", marker: {color: "orange", size: 8} };
+      let line = { x: X_curve, y: Y_curve, mode: "lines", name: "Fit", line: {color: "blue"} };
+      let residuals = data.X.map((x,i)=>({
+        x:[x,x], y:[data.Y[i], Y_pred[i]],
+        mode:"lines", line:{color:"red", width:1, dash:"dot"},
+        showlegend:(i===0), name:"Error"
+      }));
+
+      Plotly.newPlot("plot", [scatter, line, ...residuals], {
+        title: `Polynomial Degree ${degree}`,
+        margin: {t:40},
+        xaxis: {title: "X", range: [-3.5, 3.5]},
+        yaxis: {title: "Y", range: [-5, 20]}
+      });
+
+      // Formula
+      let formula = formatFormula(coeffs);
+      document.getElementById("formula").innerHTML = `\\(${formula}\\)`;
+      MathJax.typeset();
+
+      // MSE
+      document.getElementById("mse").innerHTML = `<b>MSE:</b> ${MSE.toFixed(3)}`;
+
+      // Table
+      let table = "<table><tr><th>X</th><th>Y</th><th>Predicted Y</th><th>Error</th><th>Error²</th></tr>";
+      for (let i=0;i<data.X.length;i++){
+        table += `<tr>
+          <td>${data.X[i].toFixed(2)}</td>
+          <td>${data.Y[i].toFixed(2)}</td>
+          <td>${Y_pred[i].toFixed(2)}</td>
+          <td>${errors[i].toFixed(2)}</td>
+          <td>${sqErrors[i].toFixed(2)}</td>
+        </tr>`;
+      }
+      table += "</table>";
+      document.getElementById("table-container").innerHTML = table;
+
+      // Realtime calculation explanation
+      let calcHTML = `
+        <h3>Step-by-Step MSE Calculation</h3>
+        <p><b>Errors:</b> [${errors.map(e=>e.toFixed(2)).join(", ")}]</p>
+        <p><b>Squared Errors:</b> [${sqErrors.map(s=>s.toFixed(2)).join(", ")}]</p>
+        <p><b>SSE (Sum of Squared Errors):</b> ${SSE.toFixed(3)}</p>
+        <p><b>MSE = SSE / n = ${SSE.toFixed(3)} / ${data.X.length} = ${MSE.toFixed(3)}</b></p>
+      `;
+      document.getElementById("calc").innerHTML = calcHTML;
+    }
+
+    // Initial plot
+    updatePlot(1);
+
+    // Slider event
+    document.getElementById("degree").addEventListener("input", e => {
+      let degree = parseInt(e.target.value);
+      document.getElementById("degree-value").textContent = degree;
+      updatePlot(degree);
+    });
+  </script>
+</body>
+</html>
