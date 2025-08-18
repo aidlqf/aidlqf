@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grouped Activation Functions with Random Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      background: #f8f9fa;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      text-align: center;
+      font-size: 13px;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    .chart-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+    @media (max-width: 600px) {
+      th, td { font-size: 11px; padding: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Activation Functions with Random Data (Grouped)</h1>
+
+  <!-- Sigmoid-like -->
+  <h2>Sigmoid-like Functions</h2>
+  <table id="sigmoidTable">
+    <thead>
+      <tr>
+        <th>x</th><th>Sigmoid</th><th>tanh</th><th>Swish</th><th>GELU</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="chart-container"><canvas id="sigmoidChart"></canvas></div>
+
+  <!-- ReLU family -->
+  <h2>ReLU Family</h2>
+  <table id="reluTable">
+    <thead>
+      <tr>
+        <th>x</th><th>ReLU</th><th>Leaky ReLU</th><th>ELU</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="chart-container"><canvas id="reluChart"></canvas></div>
+
+  <!-- Softmax -->
+  <h2>Softmax (2-class example)</h2>
+  <table id="softmaxTable">
+    <thead>
+      <tr><th>x</th><th>Class 1</th><th>Class 2</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="chart-container"><canvas id="softmaxChart"></canvas></div>
+
+  <script>
+    // Activation functions
+    function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+    function tanh(x) { return Math.tanh(x); }
+    function relu(x) { return Math.max(0, x); }
+    function leakyRelu(x, alpha=0.01) { return x>0?x:alpha*x; }
+    function elu(x, alpha=1) { return x>0?x:alpha*(Math.exp(x)-1); }
+    function swish(x) { return x * sigmoid(x); }
+    function gelu(x) { return 0.5 * x * (1 + Math.tanh(Math.sqrt(2/Math.PI)*(x+0.044715*Math.pow(x,3)))); }
+    function softmax(arr){
+      const exp = arr.map(v=>Math.exp(v));
+      const sum = exp.reduce((a,b)=>a+b,0);
+      return exp.map(v=>v/sum);
+    }
+
+    // Generate random input data
+    const xVals = Array.from({length: 15}, () => (Math.random() * 12 - 6).toFixed(2)).map(Number);
+
+    // Compute outputs
+    const results = xVals.map(x => ({
+      x,
+      sigmoid: sigmoid(x),
+      tanh: tanh(x),
+      relu: relu(x),
+      leakyRelu: leakyRelu(x),
+      elu: elu(x),
+      swish: swish(x),
+      gelu: gelu(x),
+      softmax: softmax([x,0]) // 2-class softmax example
+    }));
+
+    // Fill Sigmoid-like table
+    const sigTbody = document.querySelector("#sigmoidTable tbody");
+    results.forEach(r=>{
+      sigTbody.innerHTML += `<tr>
+        <td>${r.x.toFixed(2)}</td>
+        <td>${r.sigmoid.toFixed(3)}</td>
+        <td>${r.tanh.toFixed(3)}</td>
+        <td>${r.swish.toFixed(3)}</td>
+        <td>${r.gelu.toFixed(3)}</td>
+      </tr>`;
+    });
+
+    // Fill ReLU family table
+    const reluTbody = document.querySelector("#reluTable tbody");
+    results.forEach(r=>{
+      reluTbody.innerHTML += `<tr>
+        <td>${r.x.toFixed(2)}</td>
+        <td>${r.relu.toFixed(3)}</td>
+        <td>${r.leakyRelu.toFixed(3)}</td>
+        <td>${r.elu.toFixed(3)}</td>
+      </tr>`;
+    });
+
+    // Fill Softmax table
+    const softTbody = document.querySelector("#softmaxTable tbody");
+    results.forEach(r=>{
+      softTbody.innerHTML += `<tr>
+        <td>${r.x.toFixed(2)}</td>
+        <td>${r.softmax[0].toFixed(3)}</td>
+        <td>${r.softmax[1].toFixed(3)}</td>
+      </tr>`;
+    });
+
+    // Charts
+    function drawChart(canvasId, datasets, labels){
+      new Chart(document.getElementById(canvasId), {
+        type:"scatter",
+        data:{ datasets: datasets },
+        options:{
+          responsive:true,
+          plugins:{ legend:{position:"bottom"} },
+          scales:{
+            x:{ title:{display:true,text:"Input x"} },
+            y:{ title:{display:true,text:"Activation Output"} }
+          }
+        }
+      });
+    }
+
+    // Sigmoid-like chart
+    drawChart("sigmoidChart", [
+      {label:"Sigmoid", data:results.map(r=>({x:r.x,y:r.sigmoid})), borderColor:"red",backgroundColor:"red",showLine:false},
+      {label:"tanh", data:results.map(r=>({x:r.x,y:r.tanh})), borderColor:"blue",backgroundColor:"blue",showLine:false},
+      {label:"Swish", data:results.map(r=>({x:r.x,y:r.swish})), borderColor:"green",backgroundColor:"green",showLine:false},
+      {label:"GELU", data:results.map(r=>({x:r.x,y:r.gelu})), borderColor:"purple",backgroundColor:"purple",showLine:false}
+    ]);
+
+    // ReLU family chart
+    drawChart("reluChart", [
+      {label:"ReLU", data:results.map(r=>({x:r.x,y:r.relu})), borderColor:"red",backgroundColor:"red",showLine:false},
+      {label:"Leaky ReLU", data:results.map(r=>({x:r.x,y:r.leakyRelu})), borderColor:"blue",backgroundColor:"blue",showLine:false},
+      {label:"ELU", data:results.map(r=>({x:r.x,y:r.elu})), borderColor:"orange",backgroundColor:"orange",showLine:false}
+    ]);
+
+    // Softmax chart
+    new Chart(document.getElementById("softmaxChart"), {
+      type:"scatter",
+      data:{
+        datasets:[
+          {label:"Class 1", data:results.map(r=>({x:r.x,y:r.softmax[0]})), borderColor:"red",backgroundColor:"red",showLine:false},
+          {label:"Class 2", data:results.map(r=>({x:r.x,y:r.softmax[1]})), borderColor:"blue",backgroundColor:"blue",showLine:false}
+        ]
+      },
+      options:{
+        responsive:true,
+        plugins:{legend:{position:"bottom"}},
+        scales:{
+          x:{title:{display:true,text:"Input x"}},
+          y:{title:{display:true,text:"Softmax Probability"}}
+        }
+      }
+    });
+  </script>
+</body>
+</html>
