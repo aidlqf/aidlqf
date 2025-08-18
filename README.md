@@ -9,7 +9,7 @@ https://aidlqf.github.io/aidlqf/lecture2a_ml_lab_support.html
 
 https://aidlqf.github.io/aidlqf/TSLA_AAPL_NVDA_stock_analysis_2010_2020.jpg
 
-https://aidlqf.github.io/aidlqf/Activation_func.html
+https://aidlqf.github.io/aidlqf/activation_func.html
 
 
 <!--
