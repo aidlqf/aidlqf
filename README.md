@@ -3,6 +3,9 @@ https://aidlqf.github.io/aidlqf/train_test_split_r1.html
 
 https://aidlqf.github.io/aidlqf/lecture2_validation_test_train.html
 
+https://aidlqf.github.io/aidlqf/Polynomial Regression.html 
+
+https://aidlqf.github.io/aidlqf/lecture2a_ml_lab_support.html 
 
 <!--
 **aidlqf/aidlqf** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
