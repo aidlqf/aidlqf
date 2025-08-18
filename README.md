@@ -5,7 +5,10 @@ https://aidlqf.github.io/aidlqf/lecture2_validation_test_train.html
 
 https://aidlqf.github.io/aidlqf/Polynomial%20Regression.html 
 
-https://aidlqf.github.io/aidlqf/lecture2a_ml_lab_support.html 
+https://aidlqf.github.io/aidlqf/lecture2a_ml_lab_support.html
+
+https://aidlqf.github.io/aidlqf/TSLA_AAPL_NVDA_stock_analysis_2010_2020.jpg
+
 
 <!--
 **aidlqf/aidlqf** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
