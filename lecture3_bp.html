@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Training Flow</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c5aa0;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: inline-block;
+            margin: 0 15px;
+            vertical-align: top;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 80px;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .flow-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            position: absolute;
+            width: 140px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #fff;
+        }
+
+        .step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .step.active {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+            border-color: #ffd700;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1.1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .step1 { top: 50px; left: 50px; background: linear-gradient(45deg, #FF6B6B, #FF8E8E); }
+        .step2 { top: 180px; left: 300px; background: linear-gradient(45deg, #4ECDC4, #6FE7DE); }
+        .step3 { top: 180px; left: 500px; background: linear-gradient(45deg, #45B7D1, #6BC5E8); }
+        .step4 { top: 320px; left: 500px; background: linear-gradient(45deg, #F39C12, #F7B538); }
+        .step5 { top: 320px; left: 300px; background: linear-gradient(45deg, #9B59B6, #B976C8); }
+        .step6 { top: 450px; left: 100px; background: linear-gradient(45deg, #E74C3C, #ED6B5B); }
+        .step7 { top: 320px; left: 50px; background: linear-gradient(45deg, #2ECC71, #58D68D); }
+
+        .model {
+            position: absolute;
+            top: 240px;
+            left: 80px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .model.active {
+            animation: rotate 2s infinite linear;
+            box-shadow: 0 12px 35px rgba(231, 76, 60, 0.6);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 24px;
+            color: #2c5aa0;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .arrow.active {
+            color: #ffd700;
+            animation: flow 1s ease-in-out;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        @keyframes flow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .values-display {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #2c5aa0;
+            min-width: 200px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .values-display h3 {
+            margin: 0 0 10px 0;
+            color: #2c5aa0;
+            font-size: 16px;
+        }
+
+        .value-item {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .value-item.highlight {
+            background: #fff3cd;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border-left: 3px solid #ffc107;
+            animation: highlight 0.5s ease;
+        }
+
+        @keyframes highlight {
+            0% { background: #fff3cd; }
+            50% { background: #ffeaa7; }
+            100% { background: #fff3cd; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .epoch-counter {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Neural Network Training Flow - Vanishing Gradient Problem</h1>
+        
+        <div class="controls">
+            <div class="input-group">
+                <label for="inputX">Input X:</label>
+                <input type="number" id="inputX" value="1" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="inputY">Expected Y:</label>
+                <input type="number" id="inputY" value="2" step="0.1">
+            </div>
+            <button class="btn" onclick="startAnimation()">Start Training</button>
+            <button class="btn" onclick="stopAnimation()">Stop</button>
+            <button class="btn" onclick="resetAnimation()">Reset</button>
+        </div>
+
+        <div class="epoch-counter">Epoch: <span id="epochCount">0</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="flow-container">
+            <!-- Steps -->
+            <div class="step step1" id="step1">Step 1:<br>Random<br>Initialization</div>
+            <div class="step step2" id="step2">Step 2:<br>Feed Forward</div>
+            <div class="step step3" id="step3">Step 3:<br>Calculate<br>Loss Function</div>
+            <div class="step step4" id="step4">Step 4:<br>Calculate<br>Derivative</div>
+            <div class="step step5" id="step5">Step 5:<br>Backpropagate</div>
+            <div class="step step6" id="step6">Step 6:<br>Update<br>Weights</div>
+            <div class="step step7" id="step7">Step 7:<br>Iterate Until<br>Convergence</div>
+
+            <!-- Model -->
+            <div class="model" id="model">Weights/<br>Model</div>
+
+            <!-- Arrows -->
+            <div class="arrow" style="top: 90px; left: 190px; transform: rotate(15deg);">→</div>
+            <div class="arrow" style="top: 220px; left: 440px;">→</div>
+            <div class="arrow" style="top: 260px; left: 500px; transform: rotate(90deg);">→</div>
+            <div class="arrow" style="top: 360px; left: 440px; transform: rotate(180deg);">→</div>
+            <div class="arrow" style="top: 360px; left: 240px; transform: rotate(180deg);">→</div>
+            <div class="arrow" style="top: 410px; left: 100px; transform: rotate(135deg);">→</div>
+            <div class="arrow" style="top: 360px; left: 90px; transform: rotate(270deg);">→</div>
+            <div class="arrow" style="top: 150px; left: 90px; transform: rotate(270deg);">→</div>
+
+            <!-- Values Display -->
+            <div class="values-display" id="valuesDisplay">
+                <h3>Current Values</h3>
+                <div class="value-item">Input X: <span id="currentX">1</span></div>
+                <div class="value-item">Expected Y: <span id="currentY">2</span></div>
+                <div class="value-item">Predicted Y: <span id="predictedY">0.5</span></div>
+                <div class="value-item">Loss: <span id="currentLoss">2.25</span></div>
+                <div class="value-item">Weight: <span id="currentWeight">0.5</span></div>
+                <div class="value-item">Gradient: <span id="currentGradient">0.0</span></div>
+                <div class="value-item">Learning Rate: <span id="learningRate">0.01</span></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <p><strong>Problem Demonstration:</strong> Notice how the weights change by very small amounts each iteration, showing the vanishing gradient problem!</p>
+        </div>
+    </div>
+
+    <script>
+        let animationInterval;
+        let currentStep = 0;
+        let epoch = 0;
+        let isRunning = false;
+        
+        // Neural network simulation values
+        let weight = 0.5;
+        let learningRate = 0.01;
+        let inputX, expectedY;
+
+        function startAnimation() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            inputX = parseFloat(document.getElementById('inputX').value);
+            expectedY = parseFloat(document.getElementById('inputY').value);
+            
+            document.getElementById('currentX').textContent = inputX.toFixed(2);
+            document.getElementById('currentY').textContent = expectedY.toFixed(2);
+            
+            animationInterval = setInterval(() => {
+                runTrainingStep();
+            }, 1000);
+        }
+
+        function stopAnimation() {
+            clearInterval(animationInterval);
+            isRunning = false;
+            resetStepsVisual();
+        }
+
+        function resetAnimation() {
+            stopAnimation();
+            currentStep = 0;
+            epoch = 0;
+            weight = 0.5;
+            
+            document.getElementById('epochCount').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('currentWeight').textContent = weight.toFixed(4);
+            document.getElementById('currentGradient').textContent = '0.0000';
+            document.getElementById('predictedY').textContent = '0.5000';
+            document.getElementById('currentLoss').textContent = '2.2500';
+            
+            resetStepsVisual();
+        }
+
+        function runTrainingStep() {
+            resetStepsVisual();
+            
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7'];
+            const arrows = document.querySelectorAll('.arrow');
+            
+            // Activate current step
+            if (currentStep < steps.length) {
+                document.getElementById(steps[currentStep]).classList.add('active');
+                if (currentStep < arrows.length) {
+                    arrows[currentStep].classList.add('active');
+                }
+                
+                // Simulate neural network calculations
+                simulateStep(currentStep);
+                
+                currentStep++;
+                
+                if (currentStep >= steps.length) {
+                    currentStep = 1; // Skip step 1 (initialization) after first epoch
+                    epoch++;
+                    document.getElementById('epochCount').textContent = epoch;
+                    
+                    // Update progress (simulate convergence over 100 epochs)
+                    const progress = Math.min((epoch / 100) * 100, 100);
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    // Stop after 50 epochs to demonstrate the problem
+                    if (epoch >= 50) {
+                        stopAnimation();
+                        alert('Training completed! Notice how slowly the weights changed due to vanishing gradients.');
+                    }
+                }
+                
+                // Activate model rotation
+                document.getElementById('model').classList.add('active');
+                setTimeout(() => {
+                    document.getElementById('model').classList.remove('active');
+                }, 800);
+            }
+        }
+
+        function simulateStep(step) {
+            switch(step) {
+                case 0: // Step 1: Random Initialization
+                    if (epoch === 0) {
+                        highlightValue('currentWeight');
+                    }
+                    break;
+                    
+                case 1: // Step 2: Feed Forward
+                    const predictedY = inputX * weight;
+                    document.getElementById('predictedY').textContent = predictedY.toFixed(4);
+                    highlightValue('predictedY');
+                    break;
+                    
+                case 2: // Step 3: Calculate Loss
+                    const predicted = inputX * weight;
+                    const loss = Math.pow(expectedY - predicted, 2) / 2;
+                    document.getElementById('currentLoss').textContent = loss.toFixed(4);
+                    highlightValue('currentLoss');
+                    break;
+                    
+                case 3: // Step 4: Calculate Derivative
+                    const pred = inputX * weight;
+                    const gradient = -(expectedY - pred) * inputX;
+                    document.getElementById('currentGradient').textContent = gradient.toFixed(4);
+                    highlightValue('currentGradient');
+                    break;
+                    
+                case 4: // Step 5: Backpropagate
+                    highlightValue('currentGradient');
+                    break;
+                    
+                case 5: // Step 6: Update Weights
+                    const pred2 = inputX * weight;
+                    const grad = -(expectedY - pred2) * inputX;
+                    
+                    // Simulate vanishing gradient by reducing the gradient
+                    const vanishingFactor = 0.1; // This simulates the vanishing gradient problem
+                    weight = weight - learningRate * grad * vanishingFactor;
+                    
+                    document.getElementById('currentWeight').textContent = weight.toFixed(4);
+                    highlightValue('currentWeight');
+                    break;
+                    
+                case 6: // Step 7: Check Convergence
+                    highlightValue('currentLoss');
+                    break;
+            }
+        }
+
+        function highlightValue(elementId) {
+            const element = document.getElementById(elementId).parentElement;
+            element.classList.add('highlight');
+            setTimeout(() => {
+                element.classList.remove('highlight');
+            }, 800);
+        }
+
+        function resetStepsVisual() {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelectorAll('.arrow').forEach(arrow => {
+                arrow.classList.remove('active');
+            });
+        }
+
+        // Initialize display
+        resetAnimation();
+    </script>
+</body>
+</html>

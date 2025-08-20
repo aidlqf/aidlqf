@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanishing Gradient Problem - Interactive Learning</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: 0; padding: 15px; color: #fff; min-height: 100vh;
+        }
+        .main-container {
+            max-width: 1400px; margin: 0 auto;
+        }
+        h1 {
+            text-align: center; font-size: 2.5em; margin: 20px 0;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .key-insight {
+            background: rgba(255, 215, 0, 0.15); border-left: 5px solid #FFD700;
+            padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;
+            font-size: 1.2em; font-weight: bold;
+        }
+        .controls-section {
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 20px 0;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex; align-items: center; gap: 15px; margin: 10px 0;
+        }
+        .control-group label {
+            font-weight: bold; min-width: 120px;
+        }
+        .control-group input[type="range"] {
+            width: 150px; height: 8px; border-radius: 5px;
+            background: #ddd; outline: none;
+        }
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none; width: 20px; height: 20px; border-radius: 50%;
+            background: #FFD700; cursor: pointer;
+        }
+        .value-display {
+            background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px;
+            min-width: 80px; text-align: center; font-weight: bold;
+        }
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049); color: white; border: none;
+            padding: 12px 24px; font-size: 16px; border-radius: 25px; cursor: pointer;
+            margin: 5px; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); }
+        .btn:disabled { background: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn.danger { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .btn.warning { background: linear-gradient(45deg, #f39c12, #e67e22); }
+        
+        .demo-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0;
+        }
+        .network-container {
+            background: rgba(44, 62, 80, 0.95); border-radius: 20px; padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); border: 2px solid #4a627a;
+            position: relative; overflow: hidden;
+        }
+        .network-container::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg); transition: all 0.6s ease; opacity: 0;
+        }
+        .network-container.highlight::before { opacity: 1; animation: shine 0.6s ease; }
+        @keyframes shine { 0% { transform: translateX(-100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
+        
+        .network-title {
+            text-align: center; font-size: 1.3em; font-weight: bold; margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .impact-badge {
+            padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;
+        }
+        .impact-high { background: #e74c3c; color: white; }
+        .impact-medium { background: #f39c12; color: white; }
+        .impact-solved { background: #27ae60; color: white; }
+        
+        .network-visual {
+            position: relative; height: 300px; background: #2c3e50; border-radius: 15px;
+            margin: 15px 0; overflow: hidden; border: 2px solid #4a627a;
+        }
+        .layer {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .layer-input { left: 20px; }
+        .layer-h1 { left: 80px; }
+        .layer-h2 { left: 140px; }
+        .layer-h3 { left: 200px; }
+        .layer-output { left: 260px; }
+        
+        .neuron {
+            width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; font-size: 10px; border: 2px solid;
+            transition: all 0.3s ease; position: relative;
+        }
+        .neuron::after {
+            content: attr(data-gradient); position: absolute; top: -20px; left: 50%;
+            transform: translateX(-50%); font-size: 8px; background: rgba(0,0,0,0.8);
+            padding: 2px 6px; border-radius: 10px; white-space: nowrap;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .neuron.show-gradient::after { opacity: 1; }
+        
+        .neuron-input { background: #16a085; border-color: #1abc9c; }
+        .neuron-hidden { background: #3498db; border-color: #2980b9; }
+        .neuron-output { background: #e74c3c; border-color: #c0392b; }
+        
+        .neuron.vanishing { 
+            opacity: 0.3; transform: scale(0.8);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.8);
+        }
+        .neuron.healthy { 
+            opacity: 1; transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.8);
+        }
+        
+        .connection {
+            position: absolute; height: 2px; background: #7f8c8d;
+            transform-origin: left center; transition: all 0.3s ease; z-index: 1;
+        }
+        .connection.active { background: #2ecc71; height: 4px; box-shadow: 0 0 10px #2ecc71; }
+        .connection.vanishing { background: #e74c3c; height: 1px; opacity: 0.5; }
+        
+        .skip-connection {
+            position: absolute; border: 3px dashed #7f8c8d; border-radius: 15px;
+            transition: all 0.3s ease; background: none;
+        }
+        .skip-connection.active { border-color: #2ecc71; box-shadow: 0 0 15px rgba(39, 174, 96, 0.5); }
+        
+        .stats-panel {
+            background: rgba(52, 73, 94, 0.95); border-radius: 10px; padding: 15px; margin: 10px 0;
+        }
+        .stats-row {
+            display: flex; justify-content: space-between; align-items: center; margin: 8px 0;
+        }
+        .stats-row .label { font-weight: bold; color: #bdc3c7; }
+        .stats-row .value { 
+            font-family: 'Courier New', monospace; font-weight: bold;
+            padding: 3px 8px; border-radius: 5px; background: rgba(0,0,0,0.3);
+        }
+        .value-vanishing { color: #e74c3c; background: rgba(231, 76, 60, 0.2) !important; }
+        .value-healthy { color: #2ecc71; background: rgba(39, 174, 96, 0.2) !important; }
+        .value-normal { color: #f1c40f; }
+        
+        .epoch-display {
+            text-align: center; font-size: 1.2em; font-weight: bold; margin: 10px 0;
+        }
+        .step-indicator {
+            text-align: center; background: rgba(241, 196, 15, 0.2); padding: 8px;
+            border-radius: 20px; font-weight: bold; color: #f1c40f; margin: 5px 0;
+        }
+        
+        .comparison-table {
+            background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; margin: 20px 0;
+        }
+        .comparison-table h3 {
+            text-align: center; color: #FFD700; margin-bottom: 15px;
+        }
+        .comparison-table table {
+            width: 100%; border-collapse: collapse;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 12px; text-align: center; border-bottom: 1px solid #4a627a;
+        }
+        .comparison-table th {
+            background: rgba(52, 152, 219, 0.3); font-weight: bold;
+        }
+        .comparison-table .status-bad { color: #e74c3c; font-weight: bold; }
+        .comparison-table .status-good { color: #2ecc71; font-weight: bold; }
+        
+        .misconception-box {
+            background: rgba(231, 76, 60, 0.15); border: 2px solid #e74c3c; border-radius: 10px;
+            padding: 15px; margin: 15px 0;
+        }
+        .misconception-box h4 {
+            color: #e74c3c; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px;
+        }
+        
+        .insight-box {
+            background: rgba(39, 174, 96, 0.15); border: 2px solid #27ae60; border-radius: 10px;
+            padding: 15px; margin: 15px 0;
+        }
+        .insight-box h4 {
+            color: #27ae60; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px;
+        }
+        
+        .progress-container {
+            background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%; height: 8px; background: #34495e; border-radius: 4px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(45deg, #2ecc71, #27ae60);
+            width: 0%; transition: width 0.5s ease;
+        }
+        .gradient-flow-viz {
+            display: flex; align-items: center; justify-content: space-around; margin: 10px 0;
+        }
+        .flow-arrow {
+            font-size: 1.5em; transition: all 0.3s ease; opacity: 0.3;
+        }
+        .flow-arrow.active { opacity: 1; color: #2ecc71; text-shadow: 0 0 10px #2ecc71; }
+        .flow-arrow.vanishing { opacity: 1; color: #e74c3c; font-size: 1em; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>🧠 Vanishing Gradient Problem: Interactive Learning Lab</h1>
+        
+        <div class="key-insight">
+            🎯 <strong>Key Question:</strong> Why do deep neural networks train so slowly? 
+            Let's discover the answer through interactive experimentation!
+        </div>
+        
+        <div class="controls-section">
+            <div class="control-group">
+                <label>Learning Rate:</label>
+                <input type="range" id="learningRate" min="0.001" max="0.5" step="0.001" value="0.01">
+                <span class="value-display" id="lrDisplay">0.01</span>
+            </div>
+            <div class="control-group">
+                <label>Network Depth:</label>
+                <input type="range" id="networkDepth" min="2" max="6" step="1" value="4">
+                <span class="value-display" id="depthDisplay">4 layers</span>
+            </div>
+            <div class="control-group">
+                <label>Neurons per Layer:</label>
+                <input type="range" id="neuronsPerLayer" min="1" max="5" step="1" value="1">
+                <span class="value-display" id="neuronsDisplay">1</span>
+            </div>
+            <div class="control-group">
+                <button class="btn" onclick="startAll()">▶ Start Training</button>
+                <button class="btn danger" onclick="stopAll()">⏸ Pause</button>
+                <button class="btn warning" onclick="resetAll()">↻ Reset</button>
+                <button class="btn" onclick="toggleGradientDisplay()">👁 Show Gradients</button>
+            </div>
+        </div>
+        
+        <div class="demo-grid">
+            <!-- Deep Network -->
+            <div class="network-container" id="network1">
+                <div class="network-title">
+                    🔴 Deep Network
+                    <span class="impact-badge impact-high">HIGH IMPACT</span>
+                </div>
+                <div class="network-visual" id="visual1"></div>
+                <div class="gradient-flow-viz" id="flow1">
+                    <span>1.0</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.5</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.25</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.125</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.06</span>
+                </div>
+                <div class="step-indicator" id="step1">Ready to train</div>
+                <div class="epoch-display">Epoch: <span id="epoch1">0</span></div>
+                <div class="stats-panel" id="stats1"></div>
+            </div>
+            
+            <!-- Wide Network -->
+            <div class="network-container" id="network2">
+                <div class="network-title">
+                    🟡 Wide Network
+                    <span class="impact-badge impact-medium">MEDIUM IMPACT</span>
+                </div>
+                <div class="network-visual" id="visual2"></div>
+                <div class="gradient-flow-viz" id="flow2">
+                    <span>1.0</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.5</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.25</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.125</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.06</span>
+                </div>
+                <div class="step-indicator" id="step2">Ready to train</div>
+                <div class="epoch-display">Epoch: <span id="epoch2">0</span></div>
+                <div class="stats-panel" id="stats2"></div>
+            </div>
+            
+            <!-- Skip Connection Network -->
+            <div class="network-container" id="network3">
+                <div class="network-title">
+                    🟢 Skip Connections
+                    <span class="impact-badge impact-solved">PROBLEM SOLVED</span>
+                </div>
+                <div class="network-visual" id="visual3"></div>
+                <div class="gradient-flow-viz" id="flow3">
+                    <span>1.0</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.9</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.8</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.7</span>
+                    <span class="flow-arrow">→</span>
+                    <span>0.6</span>
+                </div>
+                <div class="step-indicator" id="step3">Ready to train</div>
+                <div class="epoch-display">Epoch: <span id="epoch3">0</span></div>
+                <div class="stats-panel" id="stats3"></div>
+            </div>
+        </div>
+        
+        <div class="comparison-table">
+            <h3>📊 Real-Time Comparison: Gradient Magnitudes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Network Type</th>
+                        <th>First Layer Gradient</th>
+                        <th>Last Layer Gradient</th>
+                        <th>Training Status</th>
+                        <th>Convergence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Deep Network</strong></td>
+                        <td id="deep-first-grad" class="status-bad">-</td>
+                        <td id="deep-last-grad">-</td>
+                        <td id="deep-status" class="status-bad">Not Started</td>
+                        <td id="deep-convergence">-</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Wide Network</strong></td>
+                        <td id="wide-first-grad" class="status-bad">-</td>
+                        <td id="wide-last-grad">-</td>
+                        <td id="wide-status" class="status-bad">Not Started</td>
+                        <td id="wide-convergence">-</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Skip Connections</strong></td>
+                        <td id="skip-first-grad" class="status-good">-</td>
+                        <td id="skip-last-grad">-</td>
+                        <td id="skip-status" class="status-good">Not Started</td>
+                        <td id="skip-convergence">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="misconception-box">
+            <h4>❌ Common Misconception</h4>
+            <p><strong>"If my network isn't learning, I should add more neurons!"</strong></p>
+            <p>Watch the Wide Network above - it has more neurons but <em>still suffers from vanishing gradients</em>. 
+            Adding width doesn't solve the core problem of gradient flow through depth.</p>
+        </div>
+        
+        <div class="insight-box">
+            <h4>✅ Key Insight</h4>
+            <p><strong>Architecture Design > Network Size</strong></p>
+            <p>Skip connections allow gradients to flow directly to earlier layers, maintaining their magnitude. 
+            This is why ResNet, DenseNet, and other modern architectures work so well!</p>
+        </div>
+        
+        <div class="progress-container">
+            <h3>🎯 Learning Progress</h3>
+            <p>Understanding: <span id="understanding-percent">0%</span></p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p><em>Try different settings and observe how gradients behave. Each experiment increases your understanding!</em></p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <h3>🚀 Experiment Ideas:</h3>
+            <p>1. Try increasing learning rate - does it solve vanishing gradients?</p>
+            <p>2. Make the network deeper - what happens to early layer gradients?</p>
+            <p>3. Add more neurons per layer - does training improve?</p>
+            <p>4. Compare skip connections vs. regular networks at the same depth</p>
+        </div>
+    </div>
+
+    <script>
+        class AdvancedNetworkDemo {
+            constructor(containerId, networkType) {
+                this.container = document.getElementById(containerId);
+                this.networkType = networkType;
+                this.visual = this.container.querySelector('.network-visual');
+                this.statsPanel = this.container.querySelector('.stats-panel');
+                this.stepIndicator = this.container.querySelector('.step-indicator');
+                this.epochDisplay = this.container.querySelector('span[id*="epoch"]');
+                this.flowViz = this.container.querySelector('.gradient-flow-viz');
+                
+                this.isRunning = false;
+                this.epoch = 0;
+                this.currentStep = 0;
+                this.weights = [];
+                this.activations = [];
+                this.gradients = [];
+                this.showGradients = false;
+                
+                this.reset();
+                this.buildNetwork();
+            }
+            
+            buildNetwork() {
+                this.visual.innerHTML = '';
+                const depth = parseInt(document.getElementById('networkDepth').value);
+                const neuronsPerLayer = parseInt(document.getElementById('neuronsPerLayer').value);
+                
+                // Create layers
+                for (let layer = 0; layer <= depth; layer++) {
+                    const layerDiv = document.createElement('div');
+                    layerDiv.className = 'layer';
+                    layerDiv.style.left = `${20 + layer * 60}px`;
+                    
+                    const neuronCount = (layer === 0 || layer === depth) ? 1 : 
+                                       (this.networkType === 'wide' ? Math.min(neuronsPerLayer + 1, 3) : 1);
+                    
+                    for (let neuron = 0; neuron < neuronCount; neuron++) {
+                        const neuronDiv = document.createElement('div');
+                        neuronDiv.className = `neuron ${layer === 0 ? 'neuron-input' : 
+                                                       layer === depth ? 'neuron-output' : 'neuron-hidden'}`;
+                        neuronDiv.textContent = layer === 0 ? 'X' : layer === depth ? 'Ŷ' : `H${layer}`;
+                        neuronDiv.dataset.layer = layer;
+                        neuronDiv.dataset.neuron = neuron;
+                        layerDiv.appendChild(neuronDiv);
+                    }
+                    
+                    this.visual.appendChild(layerDiv);
+                }
+                
+                // Create connections
+                this.createConnections();
+                
+                // Add skip connections for ResNet-style
+                if (this.networkType === 'skip') {
+                    this.createSkipConnections();
+                }
+            }
+            
+            createConnections() {
+                const layers = this.visual.querySelectorAll('.layer');
+                for (let i = 0; i < layers.length - 1; i++) {
+                    const fromNeurons = layers[i].querySelectorAll('.neuron');
+                    const toNeurons = layers[i + 1].querySelectorAll('.neuron');
+                    
+                    fromNeurons.forEach((fromNeuron, fromIdx) => {
+                        toNeurons.forEach((toNeuron, toIdx) => {
+                            const connection = document.createElement('div');
+                            connection.className = 'connection';
+                            
+                            const fromRect = fromNeuron.getBoundingClientRect();
+                            const toRect = toNeuron.getBoundingClientRect();
+                            const visualRect = this.visual.getBoundingClientRect();
+                            
+                            const startX = fromRect.right - visualRect.left;
+                            const startY = fromRect.top + fromRect.height/2 - visualRect.top;
+                            const endX = toRect.left - visualRect.left;
+                            const endY = toRect.top + toRect.height/2 - visualRect.top;
+                            
+                            const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                            
+                            connection.style.left = `${startX}px`;
+                            connection.style.top = `${startY}px`;
+                            connection.style.width = `${distance}px`;
+                            connection.style.transform = `rotate(${angle}deg)`;
+                            connection.dataset.from = i;
+                            connection.dataset.to = i + 1;
+                            
+                            this.visual.appendChild(connection);
+                        });
+                    });
+                }
+            }
+            
+            createSkipConnections() {
+                const layers = this.visual.querySelectorAll('.layer');
+                if (layers.length > 2) {
+                    const skipConnection = document.createElement('div');
+                    skipConnection.className = 'skip-connection';
+                    skipConnection.style.left = '80px';
+                    skipConnection.style.top = '120px';
+                    skipConnection.style.width = '120px';
+                    skipConnection.style.height = '60px';
+                    this.visual.appendChild(skipConnection);
+                }
+            }
+            
+            sigmoid(x) { return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, x)))); }
+            sigmoid_derivative(x) { return x * (1 - x); }
+            
+            async runTrainingStep() {
+                if (!this.isRunning) return;
+                
+                const inputX = 0.5;
+                const expectedY = 0.8;
+                const learningRate = parseFloat(document.getElementById('learningRate').value);
+                
+                // Forward pass
+                this.stepIndicator.textContent = '→ Forward Pass';
+                this.activations = [inputX];
+                
+                for (let i = 1; i < this.weights.length; i++) {
+                    let activation = this.sigmoid(this.activations[i-1] * this.weights[i]);
+                    
+                    // Skip connection for ResNet-style
+                    if (this.networkType === 'skip' && i > 1) {
+                        activation += this.activations[i-2] * 0.5; // Skip connection
+                    }
+                    
+                    this.activations.push(activation);
+                }
+                
+                // Highlight forward flow
+                this.highlightFlow('forward');
+                await this.sleep(800);
+                
+                // Backward pass
+                this.stepIndicator.textContent = '← Backward Pass';
+                const prediction = this.activations[this.activations.length - 1];
+                const loss = Math.pow(prediction - expectedY, 2) / 2;
+                
+                // Calculate gradients
+                this.gradients = new Array(this.weights.length).fill(0);
+                let delta = prediction - expectedY;
+                
+                for (let i = this.weights.length - 1; i >= 1; i--) {
+                    this.gradients[i] = delta * this.activations[i-1];
+                    
+                    // Calculate delta for previous layer
+                    let newDelta = delta * this.weights[i] * this.sigmoid_derivative(this.activations[i-1]);
+                    
+                    // Skip connection gradient
+                    if (this.networkType === 'skip' && i > 2) {
+                        this.gradients[i-2] += delta * 0.5; // Gradient through skip connection
+                    }
+                    
+                    delta = newDelta;
+                    
+                    // Simulate vanishing for regular networks
+                    if (this.networkType !== 'skip') {
+                        delta *= 0.2; // Vanishing factor
+                    }
+                }
+                
+                // Update visual gradients
+                this.updateGradientVisualization();
+                this.highlightFlow('backward');
+                await this.sleep(800);
+                
+                // Update weights
+                this.stepIndicator.textContent = '⚙ Updating Weights';
+                for (let i = 1; i < this.weights.length; i++) {
+                    this.weights[i] -= learningRate * this.gradients[i];
+                }
+                
+                // Update statistics
+                this.updateStatistics(loss);
+                this.updateComparisonTable();
+                
+                this.epoch++;
+                this.epochDisplay.textContent = this.epoch;
+                
+                await this.sleep(500);
+                
+                // Continue training
+                if (this.isRunning && this.epoch < 100) {
+                    this.runTrainingStep();
+                } else if (this.epoch >= 100) {
+                    this.stepIndicator.textContent = '✅ Training Complete';
+                    this.isRunning = false;
+                }
+            }
+            
+            updateGradientVisualization() {
+                const neurons = this.visual.querySelectorAll('.neuron');
+                const connections = this.visual.querySelectorAll('.connection');
+                
+                neurons.forEach((neuron, idx) => {
+                    const layer = parseInt(neuron.dataset.layer);
+                    if (layer > 0 && this.gradients[layer]) {
+                        const gradMagnitude = Math.abs(this.gradients[layer]);
+                        
+                        if (gradMagnitude < 0.01) {
+                            neuron.classList.add('vanishing');
+                            neuron.classList.remove('healthy');
+                        } else {
+                            neuron.classList.add('healthy');
+                            neuron.classList.remove('vanishing');
+                        }
+                        
+                        neuron.dataset.gradient = this.gradients[layer].toExponential(2);
+                        if (this.showGradients) {
+                            neuron.classList.add('show-gradient');
+                        }
+                    }
+                });
+                
+                // Update flow visualization
+                const flowSpans = this.flowViz.querySelectorAll('span');
+                const arrows = this.flowViz.querySelectorAll('.flow-arrow');
+                
+                for (let i = 1; i < flowSpans.length; i += 2) {
+                    const gradIdx = Math.floor(i / 2) + 1;
+                    if (this.gradients[gradIdx]) {
+                        const gradValue = Math.abs(this.gradients[gradIdx]);
+                        flowSpans[i].textContent = gradValue.toFixed(3);
+                        
+                        if (gradValue < 0.01) {
+                            flowSpans[i].style.color = '#e74c3c';
+                            if (arrows[Math.floor(i/2)]) {
+                                arrows[Math.floor(i/2)].classList.add('vanishing');
+                                arrows[Math.floor(i/2)].classList.remove('active');
+                            }
+                        } else {
+                            flowSpans[i].style.color = '#2ecc71';
+                            if (arrows[Math.floor(i/2)]) {
+                                arrows[Math.floor(i/2)].classList.add('active');
+                                arrows[Math.floor(i/2)].classList.remove('vanishing');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            updateStatistics(loss) {
+                const firstGrad = this.gradients[1] || 0;
+                const lastGrad = this.gradients[this.gradients.length - 1] || 0;
+                
+                this.statsPanel.innerHTML = `
+                    <div class="stats-row">
+                        <span class="label">Loss:</span>
+                        <span class="value ${loss < 0.01 ? 'value-healthy' : 'value-normal'}">${loss.toFixed(5)}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="label">First Layer Gradient:</span>
+                        <span class="value ${Math.abs(firstGrad) < 0.01 ? 'value-vanishing' : 'value-healthy'}">${firstGrad.toExponential(2)}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="label">Last Layer Gradient:</span>
+                        <span class="value ${Math.abs(lastGrad) < 0.01 ? 'value-vanishing' : 'value-healthy'}">${lastGrad.toExponential(2)}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="label">Gradient Ratio:</span>
+                        <span class="value value-normal">${(Math.abs(firstGrad) / Math.abs(lastGrad)).toFixed(3)}</span>
+                    </div>
+                `;
+            }
+            
+            updateComparisonTable() {
+                const prefix = this.networkType === 'deep' ? 'deep' : 
+                              this.networkType === 'wide' ? 'wide' : 'skip';
+                
+                const firstGrad = Math.abs(this.gradients[1] || 0);
+                const lastGrad = Math.abs(this.gradients[this.gradients.length - 1] || 0);
+                
+                document.getElementById(`${prefix}-first-grad`).textContent = firstGrad.toExponential(2);
+                document.getElementById(`${prefix}-last-grad`).textContent = lastGrad.toExponential(2);
+                
+                const status = firstGrad < 0.01 ? 'Vanishing Gradients' : 'Training Well';
+                document.getElementById(`${prefix}-status`).textContent = status;
+                document.getElementById(`${prefix}-status`).className = firstGrad < 0.01 ? 'status-bad' : 'status-good';
+                
+                const convergence = this.epoch > 50 ? (firstGrad < 0.01 ? 'Slow/Stuck' : 'Good') : 'In Progress';
+                document.getElementById(`${prefix}-convergence`).textContent = convergence;
+            }
+            
+            highlightFlow(direction) {
+                const connections = this.visual.querySelectorAll('.connection');
+                const skipConn = this.visual.querySelector('.skip-connection');
+                
+                connections.forEach(conn => {
+                    conn.classList.remove('active', 'vanishing');
+                    if (direction === 'forward') {
+                        conn.classList.add('active');
+                    } else {
+                        const layer = parseInt(conn.dataset.from);
+                        const gradMagnitude = Math.abs(this.gradients[layer + 1] || 0);
+                        if (gradMagnitude < 0.01) {
+                            conn.classList.add('vanishing');
+                        } else {
+                            conn.classList.add('active');
+                        }
+                    }
+                });
+                
+                if (skipConn) {
+                    skipConn.classList.add('active');
+                }
+            }
+            
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            
+            start() {
+                if (this.isRunning) return;
+                this.isRunning = true;
+                this.container.classList.add('highlight');
+                setTimeout(() => this.container.classList.remove('highlight'), 600);
+                this.runTrainingStep();
+            }
+            
+            stop() {
+                this.isRunning = false;
+                this.stepIndicator.textContent = '⏸ Paused';
+            }
+            
+            reset() {
+                this.stop();
+                this.epoch = 0;
+                this.currentStep = 0;
+                this.epochDisplay.textContent = '0';
+                this.stepIndicator.textContent = 'Ready to train';
+                
+                // Initialize weights
+                const depth = parseInt(document.getElementById('networkDepth').value) + 1;
+                this.weights = Array(depth).fill(0).map(() => Math.random() * 0.5 + 0.25);
+                this.gradients = Array(depth).fill(0);
+                
+                // Clear visual states
+                this.visual.querySelectorAll('.neuron').forEach(neuron => {
+                    neuron.classList.remove('vanishing', 'healthy', 'show-gradient');
+                });
+                
+                this.visual.querySelectorAll('.connection, .skip-connection').forEach(conn => {
+                    conn.classList.remove('active', 'vanishing');
+                });
+                
+                this.statsPanel.innerHTML = '<div class="stats-row"><span class="label">Ready to start training...</span></div>';
+            }
+            
+            toggleGradientDisplay() {
+                this.showGradients = !this.showGradients;
+                this.visual.querySelectorAll('.neuron').forEach(neuron => {
+                    if (this.showGradients) {
+                        neuron.classList.add('show-gradient');
+                    } else {
+                        neuron.classList.remove('show-gradient');
+                    }
+                });
+            }
+        }
+        
+        // Global variables
+        let demos = [];
+        let experimentsCompleted = 0;
+        
+        // Initialize demos
+        document.addEventListener('DOMContentLoaded', () => {
+            demos = [
+                new AdvancedNetworkDemo('network1', 'deep'),
+                new AdvancedNetworkDemo('network2', 'wide'),
+                new AdvancedNetworkDemo('network3', 'skip')
+            ];
+            
+            // Setup control listeners
+            document.getElementById('learningRate').addEventListener('input', updateLearningRateDisplay);
+            document.getElementById('networkDepth').addEventListener('input', updateDepthDisplay);
+            document.getElementById('neuronsPerLayer').addEventListener('input', updateNeuronsDisplay);
+            
+            updateLearningRateDisplay();
+            updateDepthDisplay();
+            updateNeuronsDisplay();
+        });
+        
+        // Control functions
+        function startAll() {
+            demos.forEach(demo => demo.start());
+            experimentsCompleted++;
+            updateProgress();
+        }
+        
+        function stopAll() {
+            demos.forEach(demo => demo.stop());
+        }
+        
+        function resetAll() {
+            demos.forEach(demo => {
+                demo.buildNetwork();
+                demo.reset();
+            });
+        }
+        
+        function toggleGradientDisplay() {
+            demos.forEach(demo => demo.toggleGradientDisplay());
+        }
+        
+        function updateLearningRateDisplay() {
+            const value = document.getElementById('learningRate').value;
+            document.getElementById('lrDisplay').textContent = parseFloat(value).toFixed(3);
+        }
+        
+        function updateDepthDisplay() {
+            const value = document.getElementById('networkDepth').value;
+            document.getElementById('depthDisplay').textContent = `${value} layers`;
+            // Rebuild networks when depth changes
+            if (demos.length > 0) {
+                resetAll();
+            }
+        }
+        
+        function updateNeuronsDisplay() {
+            const value = document.getElementById('neuronsPerLayer').value;
+            document.getElementById('neuronsDisplay').textContent = value;
+            // Rebuild networks when neuron count changes
+            if (demos.length > 0) {
+                resetAll();
+            }
+        }
+        
+        function updateProgress() {
+            const progress = Math.min(experimentsCompleted * 20, 100);
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('understanding-percent').textContent = `${progress}%`;
+        }
+    </script>
+</body>
+</html>
