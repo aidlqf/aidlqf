@@ -11,6 +11,10 @@ https://aidlqf.github.io/aidlqf/TSLA_AAPL_NVDA_stock_analysis_2010_2020.jpg
 
 https://aidlqf.github.io/aidlqf/Activation_func.html
 
+https://aidlqf.github.io/aidlqf/lecture3_bp_comparsion.html
+
+https://aidlqf.github.io/aidlqf/lecture3_bp.html
+
 
 <!--
 **aidlqf/aidlqf** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
