@@ -15,6 +15,8 @@ https://aidlqf.github.io/aidlqf/lecture3_bp_comparsion.html
 
 https://aidlqf.github.io/aidlqf/lecture3_bp.html
 
+https://aidlqf.github.io/aidlqf/AMZN_gd_logic_calculation_steps.html
+
 
 <!--
 **aidlqf/aidlqf** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
