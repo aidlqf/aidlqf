@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step-by-Step Derivative Calculation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .function {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+        
+        .term {
+            background: #fff;
+            margin: 25px 0;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .term:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .term h3 {
+            color: #495057;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .step strong {
+            color: #2c3e50;
+        }
+        
+        .result {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .final-answer {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 30px 0;
+            box-shadow: 0 8px 20px rgba(111, 66, 193, 0.3);
+        }
+        
+        .math {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        
+        .checkmark {
+            color: #28a745;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        sup {
+            font-size: 0.8em;
+            vertical-align: super;
+        }
+        
+        .power-rule {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Step-by-Step Derivative Calculation</h1>
+        
+        <div class="function">
+            <strong>Given Function:</strong><br>
+            <span class="math">f(x) = -3.5820821453486×10<sup>-7</sup>x<sup>3</sup> + 0.00176655345471687x<sup>2</sup> - 1.74899496695824x + 2160.49118089801</span>
+        </div>
+        
+        <div class="power-rule">
+            <strong>Power Rule:</strong> If f(x) = ax<sup>n</sup>, then f'(x) = n·ax<sup>(n-1)</sup>
+        </div>
+        
+        <div class="term">
+            <h3>Term 1: -3.5820821453486×10<sup>-7</sup>x<sup>3</sup></h3>
+            
+            <div class="step">
+                <strong>Coefficient =</strong> -3.5820821453486×10<sup>-7</sup>
+            </div>
+            
+            <div class="step">
+                <strong>Exponent =</strong> 3
+            </div>
+            
+            <div class="step">
+                <strong>Multiply:</strong> (3) × (-3.5820821453486×10<sup>-7</sup>) = -1.07462464360458×10<sup>-6</sup>
+            </div>
+            
+            <div class="step">
+                <strong>Reduce power:</strong> x<sup>3-1</sup> = x<sup>2</sup>
+            </div>
+            
+            <div class="result">
+                <span class="checkmark">✅</span> First derivative term: <strong>-1.07462464360458×10<sup>-6</sup>x<sup>2</sup></strong>
+            </div>
+        </div>
+        
+        <div class="term">
+            <h3>Term 2: 0.00176655345471687x<sup>2</sup></h3>
+            
+            <div class="step">
+                <strong>Coefficient =</strong> 0.00176655345471687
+            </div>
+            
+            <div class="step">
+                <strong>Exponent =</strong> 2
+            </div>
+            
+            <div class="step">
+                <strong>Multiply:</strong> (2) × (0.00176655345471687) = 0.00353310690943374
+            </div>
+            
+            <div class="step">
+                <strong>Reduce power:</strong> x<sup>2-1</sup> = x<sup>1</sup> = x
+            </div>
+            
+            <div class="result">
+                <span class="checkmark">✅</span> Second derivative term: <strong>0.00353310690943374x</strong>
+            </div>
+        </div>
+        
+        <div class="term">
+            <h3>Term 3: -1.74899496695824x</h3>
+            
+            <div class="step">
+                <strong>Coefficient =</strong> -1.74899496695824
+            </div>
+            
+            <div class="step">
+                <strong>Exponent =</strong> 1
+            </div>
+            
+            <div class="step">
+                <strong>Multiply:</strong> (1) × (-1.74899496695824) = -1.74899496695824
+            </div>
+            
+            <div class="step">
+                <strong>Reduce power:</strong> x<sup>1-1</sup> = x<sup>0</sup> = 1
+            </div>
+            
+            <div class="result">
+                <span class="checkmark">✅</span> Third derivative term: <strong>-1.74899496695824</strong>
+            </div>
+        </div>
+        
+        <div class="term">
+            <h3>Term 4: 2160.49118089801</h3>
+            
+            <div class="step">
+                <strong>Coefficient =</strong> 2160.49118089801
+            </div>
+            
+            <div class="step">
+                <strong>Exponent =</strong> 0 (constant term)
+            </div>
+            
+            <div class="step">
+                <strong>Multiply:</strong> (0) × (2160.49118089801) = 0
+            </div>
+            
+            <div class="result">
+                <span class="checkmark">✅</span> Fourth derivative term: <strong>0</strong>
+            </div>
+        </div>
+        
+        <div class="final-answer">
+            <strong>Final Answer:</strong><br>
+            <span class="math">f'(x) = -1.07462464360458×10<sup>-6</sup>x<sup>2</sup> + 0.00353310690943374x - 1.74899496695824</span>
+        </div>
+    </div>
+</body>
+</html>
