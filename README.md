@@ -18,10 +18,15 @@ https://aidlqf.github.io/aidlqf/lecture3_bp.html
 https://aidlqf.github.io/aidlqf/AMZN_gd_logic_calculation_steps.html
 
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_Dropout_L2_GlobalAveragePooling1D_r1.html
+
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_Dropout_L2_GlobalAveragePooling1D.html
+
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_dropout_L1.html
+
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_elasticnet.html
+
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_L2.html
+
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_L1.html
 
 <!--
