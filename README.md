@@ -33,6 +33,8 @@ https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2.html
 
 https://aidlqf.github.io/aidlqf/MAE_RMSE.html
 
+https://aidlqf.github.io/aidlqf/dividend_info.html
+
 <!--
 **aidlqf/aidlqf** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
