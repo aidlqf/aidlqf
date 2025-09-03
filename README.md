@@ -29,6 +29,8 @@ https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_L2.html
 
 https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2_L1.html
 
+https://aidlqf.github.io/aidlqf/L4_NLP_imdb_r2.html
+
 https://aidlqf.github.io/aidlqf/MAE_RMSE.html
 
 <!--
