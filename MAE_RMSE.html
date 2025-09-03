@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAE (Mean Absolute Error) Step-by-Step</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            padding: 40px;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #2c5aa0;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 3px solid #ffa500;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            color: #2c5aa0;
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        h3 {
+            color: #2c5aa0;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .formula {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        .explanation {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 1.1em;
+        }
+
+        th {
+            background: #2c5aa0;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tr:hover {
+            background: #e3f2fd;
+        }
+
+        .calculation-step {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .calculation-step h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .step-formula {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .navigation {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #2c5aa0, #3f7cac);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .slide-counter {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .comparison-table {
+            margin: 30px 0;
+        }
+
+        .comparison-table th {
+            background: #ffa500;
+        }
+
+        ul {
+            margin: 20px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .key-points {
+            background: #e8f5e8;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Slide 1: Introduction -->
+        <div class="slide active">
+            <h1>MAE (Mean Absolute Error)</h1>
+            
+            <div class="explanation">
+                <h3>What is MAE?</h3>
+                <p><strong>Mean Absolute Error (MAE)</strong> is a metric used to measure the average magnitude of errors between predicted and actual values in a dataset, without considering their direction (positive or negative).</p>
+            </div>
+
+            <div class="key-points">
+                <h3>Key Characteristics:</h3>
+                <ul>
+                    <li><strong>Robust to outliers</strong> - Less sensitive than MSE/RMSE</li>
+                    <li><strong>Easy to interpret</strong> - Same units as the original data</li>
+                    <li><strong>Always positive</strong> - Uses absolute values</li>
+                    <li><strong>Linear scoring</strong> - All errors are weighted equally</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 2: Formula -->
+        <div class="slide">
+            <h2>MAE Formula</h2>
+            
+            <div class="formula">
+                MAE = (1/n) Σ |y<sub>j</sub> - ŷ<sub>j</sub>|
+            </div>
+
+            <div class="explanation">
+                <h3>Formula Components:</h3>
+                <ul>
+                    <li><strong>n</strong> = Number of observations/data points</li>
+                    <li><strong>y<sub>j</sub></strong> = Actual value for observation j</li>
+                    <li><strong>ŷ<sub>j</sub></strong> = Predicted value for observation j</li>
+                    <li><strong>|y<sub>j</sub> - ŷ<sub>j</sub>|</strong> = Absolute difference (residual)</li>
+                    <li><strong>Σ</strong> = Sum of all absolute differences</li>
+                </ul>
+            </div>
+
+            <div class="key-points">
+                <h3>Steps to Calculate MAE:</h3>
+                <ol>
+                    <li>Calculate the residual (error) for each data point</li>
+                    <li>Take the absolute value of each residual</li>
+                    <li>Sum all absolute residuals</li>
+                    <li>Divide by the number of observations</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 3: Data Overview -->
+        <div class="slide">
+            <h2>Example Data Sets</h2>
+            <p>Let's examine three different prediction scenarios with the same actual values:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Actual Values</th>
+                        <th>Predicted Values</th>
+                        <th>Residuals</th>
+                        <th>MAE</th>
+                        <th>RMSE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Scenario 1</strong></td>
+                        <td>[1.5, 1.8, 2, 2.5, 3]</td>
+                        <td>[1.1, 2, 1.7, 2, 2.8]</td>
+                        <td>[0.4, 0.2, 0.3, 0.5, 0.2]</td>
+                        <td><span class="highlight">0.32</span></td>
+                        <td>0.34</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scenario 2</strong></td>
+                        <td>[1.5, 1.8, 2, 2.5, 3]</td>
+                        <td>[1.1, 2, 1.7, 2, 1]</td>
+                        <td>[0.4, 0.2, 0.3, 0.5, 2]</td>
+                        <td><span class="highlight">0.68</span></td>
+                        <td>0.95</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scenario 3</strong></td>
+                        <td>[1.5, 1.8, 2, 2.5, 3]</td>
+                        <td>[1.1, 1.4, 1.6, 2.1, 2.6]</td>
+                        <td>[0.4, 0.4, 0.4, 0.4, 0.4]</td>
+                        <td><span class="highlight">0.4</span></td>
+                        <td>0.4</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 4: Scenario 1 Calculation -->
+        <div class="slide">
+            <h2>Scenario 1: Step-by-Step Calculation</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>Actual (y<sub>i</sub>)</th>
+                        <th>Predicted (ŷ<sub>i</sub>)</th>
+                        <th>Error (y<sub>i</sub> - ŷ<sub>i</sub>)</th>
+                        <th>Absolute Error |y<sub>i</sub> - ŷ<sub>i</sub>|</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1.5</td>
+                        <td>1.1</td>
+                        <td>1.5 - 1.1 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1.8</td>
+                        <td>2.0</td>
+                        <td>1.8 - 2.0 = -0.2</td>
+                        <td>|-0.2| = 0.2</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2.0</td>
+                        <td>1.7</td>
+                        <td>2.0 - 1.7 = 0.3</td>
+                        <td>|0.3| = 0.3</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.5</td>
+                        <td>2.0</td>
+                        <td>2.5 - 2.0 = 0.5</td>
+                        <td>|0.5| = 0.5</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>3.0</td>
+                        <td>2.8</td>
+                        <td>3.0 - 2.8 = 0.2</td>
+                        <td>|0.2| = 0.2</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calculation-step">
+                <h4>Final Calculation:</h4>
+                <div class="step-formula">
+                    Sum of absolute errors = 0.4 + 0.2 + 0.3 + 0.5 + 0.2 = 1.6
+                </div>
+                <div class="step-formula">
+                    MAE = Sum / n = 1.6 / 5 = <span class="highlight">0.32</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Scenario 1 RMSE Calculation -->
+        <div class="slide">
+            <h2>Scenario 1: RMSE Step-by-Step Calculation</h2>
+            
+            <div class="formula">
+                RMSE = √[(1/n) × Σ(y<sub>i</sub> - ŷ<sub>i</sub>)²]
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>Actual (y<sub>i</sub>)</th>
+                        <th>Predicted (ŷ<sub>i</sub>)</th>
+                        <th>Error (y<sub>i</sub> - ŷ<sub>i</sub>)</th>
+                        <th>Squared Error (y<sub>i</sub> - ŷ<sub>i</sub>)²</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1.5</td>
+                        <td>1.1</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1.8</td>
+                        <td>2.0</td>
+                        <td>-0.2</td>
+                        <td>(-0.2)² = 0.04</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2.0</td>
+                        <td>1.7</td>
+                        <td>0.3</td>
+                        <td>(0.3)² = 0.09</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.5</td>
+                        <td>2.0</td>
+                        <td>0.5</td>
+                        <td>(0.5)² = 0.25</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>3.0</td>
+                        <td>2.8</td>
+                        <td>0.2</td>
+                        <td>(0.2)² = 0.04</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calculation-step">
+                <h4>Step-by-Step RMSE Calculation:</h4>
+                <div class="step-formula">
+                    1. Sum of squared errors = 0.16 + 0.04 + 0.09 + 0.25 + 0.04 = 0.58
+                </div>
+                <div class="step-formula">
+                    2. Mean Squared Error (MSE) = 0.58 / 5 = 0.116
+                </div>
+                <div class="step-formula">
+                    3. RMSE = √(0.116) = <span class="highlight">0.34</span>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <p><strong>Comparison:</strong> MAE = 0.32, RMSE = 0.34. The small difference indicates relatively consistent error distribution.</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Scenario 2 Calculation -->
+        <div class="slide">
+            <h2>Scenario 2: MAE Step-by-Step Calculation</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>Actual (y<sub>i</sub>)</th>
+                        <th>Predicted (ŷ<sub>i</sub>)</th>
+                        <th>Error (y<sub>i</sub> - ŷ<sub>i</sub>)</th>
+                        <th>Absolute Error |y<sub>i</sub> - ŷ<sub>i</sub>|</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1.5</td>
+                        <td>1.1</td>
+                        <td>1.5 - 1.1 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1.8</td>
+                        <td>2.0</td>
+                        <td>1.8 - 2.0 = -0.2</td>
+                        <td>|-0.2| = 0.2</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2.0</td>
+                        <td>1.7</td>
+                        <td>2.0 - 1.7 = 0.3</td>
+                        <td>|0.3| = 0.3</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.5</td>
+                        <td>2.0</td>
+                        <td>2.5 - 2.0 = 0.5</td>
+                        <td>|0.5| = 0.5</td>
+                    </tr>
+                    <tr style="background: #ffebee;">
+                        <td>5</td>
+                        <td>3.0</td>
+                        <td><span class="highlight">1.0</span></td>
+                        <td>3.0 - 1.0 = <span class="highlight">2.0</span></td>
+                        <td>|2.0| = <span class="highlight">2.0</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calculation-step">
+                <h4>Final Calculation:</h4>
+                <div class="step-formula">
+                    Sum of absolute errors = 0.4 + 0.2 + 0.3 + 0.5 + 2.0 = 3.4
+                </div>
+                <div class="step-formula">
+                    MAE = Sum / n = 3.4 / 5 = <span class="highlight">0.68</span>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <p><strong>Note:</strong> The large error in the 5th observation (2.0) significantly increases the MAE from 0.32 to 0.68.</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Scenario 2 RMSE Calculation -->
+        <div class="slide">
+            <h2>Scenario 2: RMSE Step-by-Step Calculation</h2>
+            
+            <div class="formula">
+                RMSE = √[(1/n) × Σ(y<sub>i</sub> - ŷ<sub>i</sub>)²]
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>Actual (y<sub>i</sub>)</th>
+                        <th>Predicted (ŷ<sub>i</sub>)</th>
+                        <th>Error (y<sub>i</sub> - ŷ<sub>i</sub>)</th>
+                        <th>Squared Error (y<sub>i</sub> - ŷ<sub>i</sub>)²</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1.5</td>
+                        <td>1.1</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1.8</td>
+                        <td>2.0</td>
+                        <td>-0.2</td>
+                        <td>(-0.2)² = 0.04</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2.0</td>
+                        <td>1.7</td>
+                        <td>0.3</td>
+                        <td>(0.3)² = 0.09</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.5</td>
+                        <td>2.0</td>
+                        <td>0.5</td>
+                        <td>(0.5)² = 0.25</td>
+                    </tr>
+                    <tr style="background: #ffebee;">
+                        <td>5</td>
+                        <td>3.0</td>
+                        <td><span class="highlight">1.0</span></td>
+                        <td><span class="highlight">2.0</span></td>
+                        <td><span class="highlight">(2.0)² = 4.0</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calculation-step">
+                <h4>Step-by-Step RMSE Calculation:</h4>
+                <div class="step-formula">
+                    1. Sum of squared errors = 0.16 + 0.04 + 0.09 + 0.25 + 4.0 = 4.54
+                </div>
+                <div class="step-formula">
+                    2. Mean Squared Error (MSE) = 4.54 / 5 = 0.908
+                </div>
+                <div class="step-formula">
+                    3. RMSE = √(0.908) = <span class="highlight">0.95</span>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <p><strong>Key Insight:</strong> The large error (2.0) becomes 4.0 when squared, dramatically increasing RMSE from 0.68 (MAE) to 0.95. This shows how RMSE heavily penalizes outliers!</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: Scenario 3 MAE Calculation -->
+        <div class="slide">
+            <h2>Scenario 3: MAE Step-by-Step Calculation</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>Actual (y<sub>i</sub>)</th>
+                        <th>Predicted (ŷ<sub>i</sub>)</th>
+                        <th>Error (y<sub>i</sub> - ŷ<sub>i</sub>)</th>
+                        <th>Absolute Error |y<sub>i</sub> - ŷ<sub>i</sub>|</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1.5</td>
+                        <td>1.1</td>
+                        <td>1.5 - 1.1 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1.8</td>
+                        <td>1.4</td>
+                        <td>1.8 - 1.4 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2.0</td>
+                        <td>1.6</td>
+                        <td>2.0 - 1.6 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.5</td>
+                        <td>2.1</td>
+                        <td>2.5 - 2.1 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>3.0</td>
+                        <td>2.6</td>
+                        <td>3.0 - 2.6 = 0.4</td>
+                        <td>|0.4| = 0.4</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calculation-step">
+                <h4>Final Calculation:</h4>
+                <div class="step-formula">
+                    Sum of absolute errors = 0.4 + 0.4 + 0.4 + 0.4 + 0.4 = 2.0
+                </div>
+                <div class="step-formula">
+                    MAE = Sum / n = 2.0 / 5 = <span class="highlight">0.4</span>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <p><strong>Note:</strong> In this scenario, all predictions have the same absolute error (0.4), resulting in a consistent MAE of 0.4.</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: Scenario 3 RMSE Calculation -->
+        <div class="slide">
+            <h2>Scenario 3: RMSE Step-by-Step Calculation</h2>
+            
+            <div class="formula">
+                RMSE = √[(1/n) × Σ(y<sub>i</sub> - ŷ<sub>i</sub>)²]
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>i</th>
+                        <th>Actual (y<sub>i</sub>)</th>
+                        <th>Predicted (ŷ<sub>i</sub>)</th>
+                        <th>Error (y<sub>i</sub> - ŷ<sub>i</sub>)</th>
+                        <th>Squared Error (y<sub>i</sub> - ŷ<sub>i</sub>)²</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1.5</td>
+                        <td>1.1</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1.8</td>
+                        <td>1.4</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2.0</td>
+                        <td>1.6</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.5</td>
+                        <td>2.1</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>3.0</td>
+                        <td>2.6</td>
+                        <td>0.4</td>
+                        <td>(0.4)² = 0.16</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="calculation-step">
+                <h4>Step-by-Step RMSE Calculation:</h4>
+                <div class="step-formula">
+                    1. Sum of squared errors = 0.16 + 0.16 + 0.16 + 0.16 + 0.16 = 0.8
+                </div>
+                <div class="step-formula">
+                    2. Mean Squared Error (MSE) = 0.8 / 5 = 0.16
+                </div>
+                <div class="step-formula">
+                    3. RMSE = √(0.16) = <span class="highlight">0.4</span>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <p><strong>Perfect Match:</strong> When all errors are equal (0.4), MAE = RMSE = 0.4. This demonstrates uniform error distribution.</p>
+            </div>
+        </div>
+
+        <!-- Slide 10: RMSE Formula Deep Dive -->
+        <div class="slide">
+            <h2>RMSE Formula Deep Dive</h2>
+            
+            <div class="formula">
+                RMSE = √[(1/n) × Σ(y<sub>i</sub> - ŷ<sub>i</sub>)²]
+            </div>
+
+            <div class="explanation">
+                <h3>RMSE Calculation Steps:</h3>
+                <ol>
+                    <li><strong>Calculate residuals:</strong> (y<sub>i</sub> - ŷ<sub>i</sub>) for each observation</li>
+                    <li><strong>Square each residual:</strong> (y<sub>i</sub> - ŷ<sub>i</sub>)² - eliminates negatives and amplifies large errors</li>
+                    <li><strong>Calculate mean:</strong> Sum all squared residuals ÷ n = Mean Squared Error (MSE)</li>
+                    <li><strong>Take square root:</strong> √MSE = RMSE (returns to original units)</li>
+                </ol>
+            </div>
+
+            <div class="key-points">
+                <h3>Why RMSE Differs from MAE:</h3>
+                <ul>
+                    <li><strong>Squaring amplifies large errors:</strong> A error of 2.0 becomes 4.0 when squared</li>
+                    <li><strong>Square root moderates the effect:</strong> But large errors still have disproportionate impact</li>
+                    <li><strong>More sensitive to outliers:</strong> RMSE increases more than MAE when outliers are present</li>
+                    <li><strong>Geometric vs Arithmetic mean:</strong> RMSE is like a geometric mean of errors</li>
+                </ul>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error Value</th>
+                        <th>Absolute Value</th>
+                        <th>Squared Value</th>
+                        <th>Impact Factor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0.2</td>
+                        <td>0.2</td>
+                        <td>0.04</td>
+                        <td>Small errors minimized</td>
+                    </tr>
+                    <tr>
+                        <td>0.5</td>
+                        <td>0.5</td>
+                        <td>0.25</td>
+                        <td>Moderate amplification</td>
+                    </tr>
+                    <tr style="background: #ffebee;">
+                        <td>2.0</td>
+                        <td>2.0</td>
+                        <td>4.0</td>
+                        <td><span class="highlight">Large errors amplified 2x</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 11: MAE vs RMSE Detailed Comparison -->
+        <div class="slide">
+            <h2>MAE vs RMSE: Detailed Comparison</h2>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>MAE Calculation</th>
+                        <th>RMSE Calculation</th>
+                        <th>MAE Result</th>
+                        <th>RMSE Result</th>
+                        <th>Ratio (RMSE/MAE)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Scenario 1</strong></td>
+                        <td>(0.4+0.2+0.3+0.5+0.2)/5</td>
+                        <td>√[(0.16+0.04+0.09+0.25+0.04)/5]</td>
+                        <td>0.32</td>
+                        <td>0.34</td>
+                        <td>1.06</td>
+                    </tr>
+                    <tr style="background: #ffebee;">
+                        <td><strong>Scenario 2</strong></td>
+                        <td>(0.4+0.2+0.3+0.5+2.0)/5</td>
+                        <td>√[(0.16+0.04+0.09+0.25+4.0)/5]</td>
+                        <td>0.68</td>
+                        <td><span class="highlight">0.95</span></td>
+                        <td><span class="highlight">1.40</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scenario 3</strong></td>
+                        <td>(0.4+0.4+0.4+0.4+0.4)/5</td>
+                        <td>√[(0.16+0.16+0.16+0.16+0.16)/5]</td>
+                        <td>0.4</td>
+                        <td>0.4</td>
+                        <td>1.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="key-points">
+                <h3>Key Insights from the Comparison:</h3>
+                <ul>
+                    <li><strong>Ratio = 1.00 (Scenario 3):</strong> Perfect uniform error distribution</li>
+                    <li><strong>Ratio ≈ 1.06 (Scenario 1):</strong> Relatively consistent errors with small variation</li>
+                    <li><strong>Ratio = 1.40 (Scenario 2):</strong> Significant outlier present - RMSE penalizes heavily</li>
+                    <li><strong>Rule of thumb:</strong> When RMSE/MAE > 1.2, you likely have outliers</li>
+                </ul>
+            </div>
+
+            <div class="explanation">
+                <h3>The Mathematics Behind the Difference:</h3>
+                <p>In Scenario 2, the outlier error of 2.0:</p>
+                <ul>
+                    <li><strong>Contributes 2.0/3.4 = 58.8%</strong> to the total absolute error sum</li>
+                    <li><strong>Contributes 4.0/4.54 = 88.1%</strong> to the total squared error sum</li>
+                    <li>This is why RMSE (0.95) is much larger than MAE (0.68) for this scenario</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 12: When to Use MAE vs RMSE -->
+        <div class="slide">
+            <h2>When to Use MAE vs RMSE?</h2>
+
+            <div class="key-points">
+                <h3>Use MAE When:</h3>
+                <ul>
+                    <li><strong>Robust evaluation needed:</strong> Outliers shouldn't dominate the metric</li>
+                    <li><strong>Linear cost of errors:</strong> All prediction errors have similar business impact</li>
+                    <li><strong>Easy interpretation required:</strong> MAE is in original data units</li>
+                    <li><strong>Median-focused models:</strong> MAE optimizes for median prediction</li>
+                </ul>
+            </div>
+
+            <div class="explanation">
+                <h3>Use RMSE When:</h3>
+                <ul>
+                    <li><strong>Large errors are costly:</strong> Want to heavily penalize big mistakes</li>
+                    <li><strong>Gaussian error assumptions:</strong> Errors are normally distributed</li>
+                    <li><strong>Standard in your field:</strong> Common in regression analysis</li>
+                    <li><strong>Mean-focused models:</strong> RMSE optimizes for mean prediction</li>
+                </ul>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>MAE</th>
+                        <th>RMSE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Outlier Sensitivity</strong></td>
+                        <td>Low (robust)</td>
+                        <td>High (sensitive)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mathematical Properties</strong></td>
+                        <td>Not differentiable at 0</td>
+                        <td>Smooth, differentiable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Optimization Target</strong></td>
+                        <td>Median</td>
+                        <td>Mean</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Interpretability</strong></td>
+                        <td>Very intuitive</td>
+                        <td>Less intuitive</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scale</strong></td>
+                        <td>Original units</td>
+                        <td>Original units</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 13: Summary -->
+        <div class="slide">
+            <h2>Summary & Best Practices</h2>
+
+            <div class="key-points">
+                <h3>When to Use MAE:</h3>
+                <ul>
+                    <li><strong>Robust evaluation needed:</strong> When outliers shouldn't dominate the metric</li>
+                    <li><strong>Interpretability important:</strong> MAE is in the same units as your data</li>
+                    <li><strong>Linear penalty preferred:</strong> All errors treated equally</li>
+                    <li><strong>Business context:</strong> When all prediction errors have similar cost</li>
+                </ul>
+            </div>
+
+            <div class="explanation">
+                <h3>Advantages of MAE:</h3>
+                <ul>
+                    <li>Easy to understand and interpret</li>
+                    <li>Robust to outliers</li>
+                    <li>Same units as original data</li>
+                    <li>Linear relationship with errors</li>
+                </ul>
+            </div>
+
+            <div class="calculation-step">
+                <h4>Quick Reference Formula:</h4>
+                <div class="step-formula">
+                    MAE = (1/n) × Σ |actual - predicted|
+                </div>
+                <p>Remember: Calculate absolute differences, sum them up, then divide by the number of observations!</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+            <button id="nextBtn" onclick="changeSlide(1)">Next →</button>
+        </div>
+
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">8</span>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 13;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlide;
+            document.getElementById('totalSlides').textContent = totalSlides;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            showSlide(currentSlide);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft') changeSlide(-1);
+            if (event.key === 'ArrowRight') changeSlide(1);
+        });
+
+        // Initialize
+        showSlide(1);
+    </script>
+</body>
+</html>
