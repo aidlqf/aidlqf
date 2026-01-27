@@ -35,7 +35,7 @@ https://aidlqf.github.io/aidlqf/MAE_RMSE.html
 
 https://aidlqf.github.io/aidlqf/dividend_info.html
 
-https://aidlqf.github.io/aidlqf/aidlqf/multiX_Polynomial%20Regression_v2.html
+https://aidlqf.github.io/aidlqf/multiX_Polynomial%20Regression_v2.html
 
 <!--
 **aidlqf/aidlqf** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
