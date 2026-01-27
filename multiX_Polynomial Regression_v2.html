@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multivariate Polynomial Regression (X1, X2 → Y)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;500;700&display=swap');
+    
+    :root {
+      --bg-primary: #0f1419;
+      --bg-secondary: #1a1f2e;
+      --bg-card: #232b3e;
+      --text-primary: #e8eaed;
+      --text-secondary: #9aa0a6;
+      --accent-blue: #4fc3f7;
+      --accent-orange: #ffb74d;
+      --accent-green: #81c784;
+      --accent-red: #ef5350;
+      --accent-purple: #b39ddb;
+      --border-color: #3d4663;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 30px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-weight: 300;
+      font-size: 1.1rem;
+    }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 25px;
+    }
+    
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .plot-container {
+      min-height: 550px;
+    }
+    
+    #plot {
+      width: 100%;
+      height: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .slider-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    
+    .slider-label span:first-child {
+      color: var(--text-secondary);
+    }
+    
+    .degree-badge {
+      background: var(--accent-blue);
+      color: var(--bg-primary);
+      padding: 2px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(79, 195, 247, 0.4);
+      transition: transform 0.2s;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+    }
+    
+    .stat-box {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    
+    .stat-value.mse { color: var(--accent-orange); }
+    .stat-value.r2 { color: var(--accent-green); }
+    .stat-value.terms { color: var(--accent-purple); }
+    
+    .sidebar h3 {
+      font-size: 1rem;
+      margin-bottom: 15px;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .sidebar h3::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+    
+    #formula-container {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+    }
+    
+    .table-wrapper {
+      max-height: 350px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    th {
+      background: var(--bg-secondary);
+      color: var(--accent-blue);
+      padding: 10px 8px;
+      text-align: right;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+    }
+    
+    td {
+      padding: 8px;
+      text-align: right;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    tr:hover td {
+      background: rgba(79, 195, 247, 0.05);
+    }
+    
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+    
+    .calc-section {
+      margin-top: 20px;
+    }
+    
+    .calc-step {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+    
+    .calc-step-label {
+      color: var(--accent-purple);
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    
+    .calc-step-content {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      word-break: break-all;
+      line-height: 1.6;
+    }
+    
+    .calc-step-content.highlight {
+      color: var(--accent-orange);
+      font-size: 1rem;
+    }
+    
+    .info-box {
+      background: linear-gradient(135deg, rgba(79, 195, 247, 0.1), rgba(179, 157, 219, 0.1));
+      border: 1px solid var(--accent-blue);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    
+    .info-box strong {
+      color: var(--accent-blue);
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-blue);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Multivariate Polynomial Regression</h1>
+      <p class="subtitle">Interactive 3D visualization with two features (X₁, X₂) predicting Y</p>
+    </header>
+    
+    <div class="main-grid">
+      <div class="card plot-container">
+        <div id="plot"></div>
+        <div class="controls">
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Polynomial Degree</span>
+              <span class="degree-badge" id="degree-value">1</span>
+            </div>
+            <input type="range" id="degree" min="1" max="6" value="1" />
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">MSE</div>
+            <div class="stat-value mse" id="mse-value">-</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">R² Score</div>
+            <div class="stat-value r2" id="r2-value">-</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Terms</div>
+            <div class="stat-value terms" id="terms-value">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar">
+        <div class="card">
+          <h3>Fitted Equation</h3>
+          <div id="formula-container">
+            <div id="formula"></div>
+          </div>
+          
+          <h3>Data Table</h3>
+          <div class="table-wrapper">
+            <table id="data-table">
+              <thead>
+                <tr>
+                  <th>X₁</th>
+                  <th>X₂</th>
+                  <th>Y</th>
+                  <th>Ŷ</th>
+                  <th>Error</th>
+                  <th>Error²</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+          
+          <div class="calc-section">
+            <h3>MSE Calculation</h3>
+            <div id="calc-steps"></div>
+          </div>
+          
+          <div class="info-box">
+            <strong>Tip:</strong> Increase the degree to see how the model fits better (lower MSE) but watch for overfitting! With degree > 4, the surface may become unrealistic outside the data range.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Seeded random generator (same as original) ---
+    function mulberry32(seed) {
+      return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+
+    // Generate 3D data: X1, X2 -> Y
+    function generateData(n = 30, seed = 54321) {
+      let rand = mulberry32(seed);
+      let X1 = [], X2 = [], Y = [];
+      for (let i = 0; i < n; i++) {
+        let x1 = -2 + 4 * rand();
+        let x2 = -2 + 4 * rand();
+        // True function: y = 0.5*x1² + 0.3*x2² + 0.4*x1*x2 + x1 - 0.5*x2 + 2
+        let y_true = 0.5*x1*x1 + 0.3*x2*x2 + 0.4*x1*x2 + x1 - 0.5*x2 + 2;
+        let y = y_true + (rand() - 0.5) * 2; // noise
+        X1.push(x1);
+        X2.push(x2);
+        Y.push(y);
+      }
+      return { X1, X2, Y };
+    }
+
+    // Generate polynomial features for two variables
+    // Degree d includes all terms x1^i * x2^j where i + j <= d
+    function generateFeatures(X1, X2, degree) {
+      let n = X1.length;
+      let features = [];
+      let termLabels = [];
+      
+      for (let i = 0; i < n; i++) {
+        let row = [];
+        for (let d1 = 0; d1 <= degree; d1++) {
+          for (let d2 = 0; d2 <= degree - d1; d2++) {
+            row.push(Math.pow(X1[i], d1) * Math.pow(X2[i], d2));
+            if (i === 0) {
+              // Build term label
+              if (d1 === 0 && d2 === 0) termLabels.push("1");
+              else if (d1 === 0) termLabels.push(d2 === 1 ? "x_2" : `x_2^{${d2}}`);
+              else if (d2 === 0) termLabels.push(d1 === 1 ? "x_1" : `x_1^{${d1}}`);
+              else {
+                let t1 = d1 === 1 ? "x_1" : `x_1^{${d1}}`;
+                let t2 = d2 === 1 ? "x_2" : `x_2^{${d2}}`;
+                termLabels.push(`${t1}${t2}`);
+              }
+            }
+          }
+        }
+        features.push(row);
+      }
+      return { features, termLabels };
+    }
+
+    // Matrix operations
+    function transpose(m) {
+      return m[0].map((_, i) => m.map(row => row[i]));
+    }
+    
+    function multiply(a, b) {
+      return a.map(row => 
+        b[0].map((_, j) => 
+          row.reduce((sum, val, k) => sum + val * b[k][j], 0)
+        )
+      );
+    }
+    
+    function inverse(matrix) {
+      let size = matrix.length;
+      let I = matrix.map((row, i) => row.map((_, j) => (i === j ? 1 : 0)));
+      let M = matrix.map(row => row.slice());
+      
+      for (let i = 0; i < size; i++) {
+        // Find pivot
+        let maxRow = i;
+        for (let k = i + 1; k < size; k++) {
+          if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+        }
+        [M[i], M[maxRow]] = [M[maxRow], M[i]];
+        [I[i], I[maxRow]] = [I[maxRow], I[i]];
+        
+        let diag = M[i][i];
+        if (Math.abs(diag) < 1e-10) {
+          // Add regularization for near-singular matrix
+          diag = 1e-6;
+        }
+        
+        for (let j = 0; j < size; j++) {
+          M[i][j] /= diag;
+          I[i][j] /= diag;
+        }
+        
+        for (let k = 0; k < size; k++) {
+          if (k !== i) {
+            let factor = M[k][i];
+            for (let j = 0; j < size; j++) {
+              M[k][j] -= factor * M[i][j];
+              I[k][j] -= factor * I[i][j];
+            }
+          }
+        }
+      }
+      return I;
+    }
+
+    // Polynomial fit with regularization
+    function polyFit(X1, X2, Y, degree) {
+      let { features, termLabels } = generateFeatures(X1, X2, degree);
+      let A = features;
+      let AT = transpose(A);
+      let ATA = multiply(AT, A);
+      
+      // Add small regularization to diagonal
+      for (let i = 0; i < ATA.length; i++) {
+        ATA[i][i] += 1e-8;
+      }
+      
+      let ATY = multiply(AT, Y.map(y => [y]));
+      let w = multiply(inverse(ATA), ATY).map(row => row[0]);
+      
+      return { coeffs: w, termLabels };
+    }
+
+    // Predict for arrays
+    function predict(X1, X2, coeffs, degree) {
+      let { features } = generateFeatures(X1, X2, degree);
+      return features.map(row => 
+        row.reduce((sum, val, i) => sum + val * coeffs[i], 0)
+      );
+    }
+
+    // Predict for single point
+    function predictSingle(x1, x2, coeffs, degree) {
+      let val = 0;
+      let idx = 0;
+      for (let d1 = 0; d1 <= degree; d1++) {
+        for (let d2 = 0; d2 <= degree - d1; d2++) {
+          val += coeffs[idx] * Math.pow(x1, d1) * Math.pow(x2, d2);
+          idx++;
+        }
+      }
+      return val;
+    }
+
+    // Format equation
+    function formatFormula(coeffs, termLabels) {
+      let terms = [];
+      for (let i = 0; i < coeffs.length; i++) {
+        let c = coeffs[i];
+        if (Math.abs(c) < 0.001) continue;
+        
+        let sign = c >= 0 ? "+" : "-";
+        let absC = Math.abs(c).toFixed(3);
+        
+        if (termLabels[i] === "1") {
+          terms.push(`${sign} ${absC}`);
+        } else {
+          terms.push(`${sign} ${absC}${termLabels[i]}`);
+        }
+      }
+      
+      let formula = terms.join(" ");
+      if (formula.startsWith("+")) formula = formula.substring(2);
+      return "y = " + formula;
+    }
+
+    // --- Fixed dataset ---
+    const data = generateData(30, 12345);
+
+    // Main update function
+    function updatePlot(degree) {
+      let { coeffs, termLabels } = polyFit(data.X1, data.X2, data.Y, degree);
+      let Y_pred = predict(data.X1, data.X2, coeffs, degree);
+
+      // Calculate errors
+      let errors = data.Y.map((val, i) => val - Y_pred[i]);
+      let sqErrors = errors.map(e => e * e);
+      let SSE = sqErrors.reduce((a, b) => a + b, 0);
+      let MSE = SSE / data.X1.length;
+      
+      // R² calculation
+      let yMean = data.Y.reduce((a, b) => a + b, 0) / data.Y.length;
+      let SST = data.Y.reduce((sum, y) => sum + (y - yMean) ** 2, 0);
+      let R2 = 1 - SSE / SST;
+
+      // Create surface grid
+      let gridSize = 25;
+      let x1Range = [], x2Range = [];
+      for (let i = 0; i < gridSize; i++) {
+        x1Range.push(-2.5 + 5 * i / (gridSize - 1));
+        x2Range.push(-2.5 + 5 * i / (gridSize - 1));
+      }
+      
+      let zSurface = [];
+      for (let j = 0; j < gridSize; j++) {
+        let row = [];
+        for (let i = 0; i < gridSize; i++) {
+          row.push(predictSingle(x1Range[i], x2Range[j], coeffs, degree));
+        }
+        zSurface.push(row);
+      }
+
+      // Scatter points
+      let scatter = {
+        x: data.X1,
+        y: data.X2,
+        z: data.Y,
+        mode: 'markers',
+        type: 'scatter3d',
+        name: 'Data Points',
+        marker: {
+          size: 6,
+          color: '#ffb74d',
+          line: { color: '#fff', width: 1 }
+        }
+      };
+
+      // Fitted surface
+      let surface = {
+        x: x1Range,
+        y: x2Range,
+        z: zSurface,
+        type: 'surface',
+        name: 'Fitted Surface',
+        colorscale: [
+          [0, '#1a237e'],
+          [0.25, '#4fc3f7'],
+          [0.5, '#81c784'],
+          [0.75, '#fff176'],
+          [1, '#ef5350']
+        ],
+        opacity: 0.85,
+        showscale: false
+      };
+
+      // Residual lines (vertical lines from points to surface)
+      let residualLines = [];
+      for (let i = 0; i < data.X1.length; i++) {
+        residualLines.push({
+          x: [data.X1[i], data.X1[i]],
+          y: [data.X2[i], data.X2[i]],
+          z: [data.Y[i], Y_pred[i]],
+          type: 'scatter3d',
+          mode: 'lines',
+          line: { color: '#ef5350', width: 2 },
+          showlegend: i === 0,
+          name: 'Residuals'
+        });
+      }
+
+      let layout = {
+        scene: {
+          xaxis: { title: 'X₁', range: [-3, 3], gridcolor: '#3d4663', zerolinecolor: '#4fc3f7' },
+          yaxis: { title: 'X₂', range: [-3, 3], gridcolor: '#3d4663', zerolinecolor: '#4fc3f7' },
+          zaxis: { title: 'Y', range: [-5, 15], gridcolor: '#3d4663', zerolinecolor: '#4fc3f7' },
+          bgcolor: '#1a1f2e',
+          camera: { eye: { x: 1.5, y: 1.5, z: 1.2 } }
+        },
+        paper_bgcolor: '#232b3e',
+        font: { color: '#e8eaed', family: 'Outfit' },
+        margin: { l: 0, r: 0, t: 30, b: 0 },
+        showlegend: true,
+        legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(26,31,46,0.8)' }
+      };
+
+      Plotly.newPlot('plot', [surface, scatter, ...residualLines], layout, { responsive: true });
+
+      // Update stats
+      document.getElementById('mse-value').textContent = MSE.toFixed(4);
+      document.getElementById('r2-value').textContent = R2.toFixed(4);
+      document.getElementById('terms-value').textContent = coeffs.length;
+
+      // Update formula
+      let formula = formatFormula(coeffs, termLabels);
+      document.getElementById('formula').innerHTML = `\\(${formula}\\)`;
+      MathJax.typeset();
+
+      // Update table
+      let tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+      for (let i = 0; i < data.X1.length; i++) {
+        let errorClass = errors[i] >= 0 ? 'positive' : 'negative';
+        tbody.innerHTML += `
+          <tr>
+            <td>${data.X1[i].toFixed(2)}</td>
+            <td>${data.X2[i].toFixed(2)}</td>
+            <td>${data.Y[i].toFixed(2)}</td>
+            <td>${Y_pred[i].toFixed(2)}</td>
+            <td class="${errorClass}">${errors[i].toFixed(2)}</td>
+            <td>${sqErrors[i].toFixed(2)}</td>
+          </tr>
+        `;
+      }
+
+      // Update calculation steps
+      let calcSteps = document.getElementById('calc-steps');
+      calcSteps.innerHTML = `
+        <div class="calc-step">
+          <div class="calc-step-label">Sum of Squared Errors (SSE)</div>
+          <div class="calc-step-content">${sqErrors.map(s => s.toFixed(2)).slice(0, 8).join(' + ')}${sqErrors.length > 8 ? ' + ...' : ''} = ${SSE.toFixed(4)}</div>
+        </div>
+        <div class="calc-step">
+          <div class="calc-step-label">Mean Squared Error (MSE)</div>
+          <div class="calc-step-content highlight">MSE = SSE / n = ${SSE.toFixed(4)} / ${data.X1.length} = ${MSE.toFixed(4)}</div>
+        </div>
+        <div class="calc-step">
+          <div class="calc-step-label">R² Coefficient</div>
+          <div class="calc-step-content">R² = 1 - SSE/SST = 1 - ${SSE.toFixed(4)}/${SST.toFixed(4)} = ${R2.toFixed(4)}</div>
+        </div>
+      `;
+    }
+
+    // Initial plot - wait for page load
+    window.addEventListener('load', function() {
+      updatePlot(1);
+    });
+
+    // Slider event
+    document.getElementById('degree').addEventListener('input', e => {
+      let degree = parseInt(e.target.value);
+      document.getElementById('degree-value').textContent = degree;
+      updatePlot(degree);
+    });
+  </script>
+</body>
+</html>
