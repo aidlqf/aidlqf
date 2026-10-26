@@ -1,0 +1,2206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>L4 Predictions Workbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Layout: masthead (title + import) → ledger of the two summary cells → Excel-style formula bar and virtualized sheet → worked row + formula notes */
+:root {
+  --bg: #0f1316;
+  --panel: #151a1f;
+  --raise: #1b2127;
+  --rule: #252d35;
+  --rule-strong: #35404a;
+  --fg: #ebe5d8;
+  --muted: #929ba5;
+  --faint: #66707a;
+  --accent: #d8a24c;
+  --accent-ink: #1b1407;
+  --accent-soft: rgba(216, 162, 76, 0.15);
+  --ok: #7cc597;
+  --ok-soft: rgba(124, 197, 151, 0.14);
+  --bad: #f2806f;
+  --bad-soft: rgba(242, 128, 111, 0.17);
+  --spill: #72b6dc;
+  --display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --body: "Spectral", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --rh: 26px;
+  --head: 42px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f2ec; --panel: #ffffff; --raise: #eeebe3; --rule: #e0dcd2; --rule-strong: #c8c1b4;
+    --fg: #1c2025; --muted: #5d6671; --faint: #8a929b;
+    --accent: #95621a; --accent-ink: #fff8ea; --accent-soft: rgba(149, 98, 26, 0.12);
+    --ok: #2b7a4b; --ok-soft: rgba(43, 122, 75, 0.11); --bad: #b2402f; --bad-soft: rgba(178, 64, 47, 0.11);
+    --spill: #2c76b2;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f4f2ec; --panel: #ffffff; --raise: #eeebe3; --rule: #e0dcd2; --rule-strong: #c8c1b4;
+  --fg: #1c2025; --muted: #5d6671; --faint: #8a929b;
+  --accent: #95621a; --accent-ink: #fff8ea; --accent-soft: rgba(149, 98, 26, 0.12);
+  --ok: #2b7a4b; --ok-soft: rgba(43, 122, 75, 0.11); --bad: #b2402f; --bad-soft: rgba(178, 64, 47, 0.11);
+  --spill: #2c76b2;
+  color-scheme: light;
+}
+
+[hidden] { display: none !important; }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+.page {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: grid;
+  gap: 22px;
+}
+.page > * { min-width: 0; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- masthead ---------- */
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 22px 40px;
+  align-items: end;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--rule);
+}
+.eyebrow {
+  font: 500 11px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(30px, 4.2vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+  font-variation-settings: "opsz" 120;
+}
+.lede { margin: 0; max-width: 64ch; color: var(--muted); font-size: 16px; }
+.lede code { color: var(--fg); }
+.actions { display: grid; gap: 10px; justify-items: start; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 38px; padding: 0 16px;
+  border-radius: 7px;
+  border: 1px solid var(--rule-strong);
+  background: var(--panel);
+  font: 500 13px/1 var(--mono);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.small { height: 30px; padding: 0 11px; font-size: 12px; }
+.btn svg { width: 15px; height: 15px; flex: none; }
+.hint { margin: 0; font-size: 13.5px; color: var(--faint); }
+
+/* ---------- sources ---------- */
+.sources { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline; font: 12.5px/1.5 var(--mono); }
+.src { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; min-width: 0; }
+.src .k { color: var(--faint); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10.5px; }
+.src b { font-weight: 600; overflow-wrap: anywhere; }
+.src .meta { color: var(--muted); }
+.src .tag { color: var(--accent); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font: inherit; }
+.linkbtn:hover { color: var(--fg); }
+.notice { font: 13px/1.5 var(--mono); color: var(--muted); padding: 10px 14px; border-left: 2px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
+.notice.bad { border-left-color: var(--bad); background: var(--bad-soft); color: var(--fg); }
+
+/* ---------- ledger ---------- */
+.ledger {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.25fr) minmax(0, 0.8fr) minmax(0, 1.2fr);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.tile { padding: 16px 18px 18px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.tile + .tile { border-left: 1px solid var(--rule); }
+.lab { display: flex; gap: 10px; align-items: baseline; font: 500 11px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.lab code { font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--accent); }
+.big {
+  font-family: var(--display);
+  font-size: clamp(23px, 2.35vw, 33px);
+  line-height: 1.1;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-variation-settings: "opsz" 60;
+  overflow-wrap: anywhere;
+}
+.big.err { color: var(--bad); }
+.tile .f { font: 11.5px/1.45 var(--mono); color: var(--faint); overflow-wrap: anywhere; }
+.tile .saved { font: 12px/1.45 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.state { display: inline-flex; align-items: center; gap: 10px; }
+.state .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--faint); flex: none; }
+.state.ok { color: var(--ok); } .state.ok .dot { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
+.state.bad { color: var(--bad); } .state.bad .dot { background: var(--bad); box-shadow: 0 0 0 4px var(--bad-soft); }
+.state.none { color: var(--muted); }
+.mark { font: 600 11px/1 var(--mono); padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
+.mark.ok { color: var(--ok); background: var(--ok-soft); }
+.mark.bad { color: var(--bad); background: var(--bad-soft); }
+
+/* ---------- workspace: formula bar + sheet ---------- */
+.work { border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); overflow: hidden; }
+.fbar { display: grid; grid-template-columns: 92px auto minmax(0, 1fr); align-items: center; border-bottom: 1px solid var(--rule); }
+.namebox {
+  height: 38px; width: 100%;
+  border: 0; border-right: 1px solid var(--rule);
+  background: var(--raise);
+  padding: 0 10px;
+  font: 600 13px/1 var(--mono);
+  text-transform: uppercase;
+}
+.namebox:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.fx { font: italic 600 14px/1 var(--display); color: var(--accent); padding: 0 12px; border-right: 1px solid var(--rule); height: 100%; display: flex; align-items: center; }
+.ftext { font: 13px/1.5 var(--mono); padding: 8px 12px; overflow-x: auto; white-space: nowrap; min-width: 0; }
+.ftext.ghost { color: var(--faint); }
+.ftext:empty::before { content: "\00a0"; }
+.fvalue {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px;
+  padding: 8px 12px; border-bottom: 1px solid var(--rule);
+  font: 12.5px/1.5 var(--mono); color: var(--muted);
+  min-height: 37px;
+}
+.fvalue .v { color: var(--fg); overflow-wrap: anywhere; }
+.fvalue .k { color: var(--faint); text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.1em; margin-right: 6px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 9px 12px; border-bottom: 1px solid var(--rule); background: var(--raise); }
+.toolbar .spacer { flex: 1; }
+.seg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; background: transparent; height: 30px; padding: 0 12px; font: 500 12px/1 var(--mono); cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--rule-strong); }
+.seg button[aria-checked="true"] { background: var(--accent-soft); color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+.tlabel { font: 500 10.5px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+.chk { display: inline-flex; align-items: center; gap: 8px; font: 12.5px/1 var(--mono); color: var(--fg); cursor: pointer; }
+.chk input { accent-color: var(--bad); width: 15px; height: 15px; margin: 0; }
+
+.scroll {
+  position: relative;
+  height: clamp(380px, 62vh, 860px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  outline: none;
+}
+.scroll:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.sheet { position: relative; width: max-content; min-width: 100%; font: 12.5px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.chead { position: sticky; top: 0; z-index: 6; display: grid; grid-template-columns: var(--cols); height: var(--head); background: var(--raise); border-bottom: 1px solid var(--rule-strong); }
+.chead > div { border-right: 1px solid var(--rule); padding: 6px 8px 0; display: grid; align-content: start; gap: 4px; min-width: 0; overflow: hidden; }
+.chead .corner { position: sticky; left: 0; z-index: 7; background: var(--raise); border-right: 1px solid var(--rule-strong); }
+.chead .letter { font-weight: 600; color: var(--muted); display: flex; gap: 6px; align-items: baseline; }
+.chead .letter i { font: italic 600 10px/1 var(--display); color: var(--faint); }
+.chead .cap { font-size: 10.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chead .on { box-shadow: inset 0 -2px 0 var(--accent); }
+.chead .on .letter { color: var(--accent); }
+.sbody { position: relative; }
+.win { position: absolute; left: 0; top: 0; width: 100%; }
+.row { display: grid; grid-template-columns: var(--cols); height: var(--rh); }
+.row > div {
+  position: relative;
+  padding: 0 8px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  line-height: calc(var(--rh) - 1px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: cell;
+}
+.row > .rh {
+  position: sticky; left: 0; z-index: 2;
+  background: var(--raise);
+  color: var(--faint);
+  text-align: right;
+  border-right-color: var(--rule-strong);
+  cursor: default;
+}
+.row > .rh.on { color: var(--accent); box-shadow: inset -2px 0 0 var(--accent); }
+.row > .n { text-align: right; }
+.row > .e { text-align: center; color: var(--bad); }
+.row > .sum { background: var(--accent-soft); font-weight: 600; }
+.row.sumrow > div { border-top: 1px solid var(--rule-strong); }
+.row > .dx { background: var(--bad-soft); }
+.row > .dx::after {
+  content: ""; position: absolute; top: 0; right: 0;
+  border-style: solid; border-width: 0 7px 7px 0;
+  border-color: transparent var(--bad) transparent transparent;
+}
+.selbox { position: absolute; z-index: 1; pointer-events: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.spillbox { position: absolute; z-index: 1; pointer-events: none; border: 1px dashed var(--spill); }
+.sheet-empty {
+  position: sticky; left: 0;
+  max-width: 760px;
+  padding: 28px 22px 30px;
+  display: grid; gap: 14px; justify-items: start;
+}
+.sheet-empty h2 { font: 600 22px/1.2 var(--display); margin: 0; text-wrap: balance; }
+.sheet-empty p { margin: 0; max-width: 64ch; color: var(--muted); }
+.sheet-empty .fine { font-size: 14px; color: var(--faint); }
+.empty-err { font: 13px/1.5 var(--mono); color: var(--bad) !important; padding: 8px 12px; border-left: 2px solid var(--bad); background: var(--bad-soft); border-radius: 0 6px 6px 0; }
+.ex-wrap { max-width: 100%; overflow-x: auto; }
+.ex { border-collapse: collapse; font: 12.5px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.ex caption { caption-side: top; text-align: left; font: 500 10.5px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); padding-bottom: 8px; }
+.ex th, .ex td { border: 1px solid var(--rule); padding: 7px 10px; white-space: nowrap; text-align: left; }
+.ex thead th, .ex tbody th { background: var(--raise); color: var(--faint); font-weight: 600; }
+.ex tbody th { text-align: right; }
+.ex td.n { text-align: right; }
+.big.blank { color: var(--faint); }
+
+/* ---------- notes ---------- */
+.notes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 22px; align-items: start; }
+.card { border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); padding: 18px 20px 20px; min-width: 0; }
+.card h2 { font: 600 21px/1.2 var(--display); margin: 0 0 4px; letter-spacing: -0.005em; text-wrap: balance; }
+.card h3 { font: 600 16px/1.3 var(--display); margin: 18px 0 4px; }
+.card p { margin: 0 0 10px; max-width: 66ch; }
+.card .sub { color: var(--muted); margin-bottom: 14px; }
+.trace { display: grid; gap: 0; margin: 0; }
+.trace > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-top: 1px solid var(--rule); }
+.trace dt { font: 600 12.5px/1.5 var(--mono); color: var(--accent); }
+.trace dd { margin: 0; min-width: 0; }
+.trace .val { font: 13px/1.5 var(--mono); overflow-wrap: anywhere; }
+.trace .why { font-size: 14px; color: var(--muted); }
+.trace .pieces { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.trace .pieces span { font: 12.5px/1 var(--mono); padding: 5px 7px; border: 1px dashed var(--spill); border-radius: 4px; overflow-wrap: anywhere; }
+.trace .pieces b { font-weight: 600; color: var(--faint); margin-right: 6px; }
+.ftable-wrap { overflow-x: auto; margin: 6px 0 4px; }
+.ftable { border-collapse: collapse; width: 100%; font: 12.5px/1.45 var(--mono); }
+.ftable th { text-align: left; font: 500 10.5px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); padding: 0 12px 8px 0; border-bottom: 1px solid var(--rule-strong); }
+.ftable td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.ftable td:first-child { color: var(--accent); white-space: nowrap; font-weight: 600; }
+.ftable td:nth-child(2) { word-break: break-all; min-width: 18ch; }
+.ftable td:last-child { color: var(--muted); font-family: var(--body); font-size: 14px; min-width: 16ch; }
+.rules { list-style: none; padding: 0; margin: 8px 0 0; display: grid; }
+.rules li { padding: 12px 0 2px; border-top: 1px solid var(--rule); }
+.rules b { font-family: var(--display); font-weight: 600; font-size: 16px; display: block; margin-bottom: 3px; }
+.rules p { margin: 0 0 10px; }
+.rules .num { font-family: var(--mono); font-size: 13px; color: var(--fg); }
+
+/* ---------- drop + toast ---------- */
+.drop {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  padding: 24px;
+}
+.drop div { border: 2px dashed var(--accent); border-radius: 14px; padding: 46px 40px; font: 600 24px/1.2 var(--display); text-align: center; background: var(--panel); max-width: 100%; }
+.drop small { display: block; font: 13px/1.5 var(--mono); color: var(--muted); margin-top: 10px; }
+.toast {
+  position: fixed; z-index: 60;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100% - 32px);
+  padding: 10px 16px; border-radius: 8px;
+  background: var(--fg); color: var(--bg);
+  font: 13px/1.4 var(--mono);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 1080px) {
+  .masthead { grid-template-columns: 1fr; align-items: start; }
+  .ledger { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tile:nth-child(3) { border-left: 0; }
+  .tile:nth-child(n + 3) { border-top: 1px solid var(--rule); }
+  .notes { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .page { padding-block: 20px 40px; gap: 18px; }
+  .ledger { grid-template-columns: 1fr; }
+  .tile + .tile { border-left: 0; border-top: 1px solid var(--rule); }
+  .fbar { grid-template-columns: 74px auto minmax(0, 1fr); }
+  .trace > div { grid-template-columns: 52px minmax(0, 1fr); }
+  .scroll { height: clamp(340px, 58vh, 620px); }
+}
+</style>
+
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Excel formula engine &middot; TEXTSPLIT arrays</p>
+      <h1>L4 Predictions Workbook</h1>
+      <p class="lede">Import a just-data file with <code>y_pred</code>, <code>y_actual</code> and <code>X_actual</code>. Each bracketed array is split into cells, then columns D to J and the MAE and RMSE row are filled with the workbook's formulas. The page uses Excel's own arithmetic, so every value matches the .xlsx.</p>
+    </div>
+    <div class="actions">
+      <div class="btnrow">
+        <button class="btn primary" id="importBtn" type="button">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 11V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v3h11v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Import just-data file
+        </button>
+        <button class="btn" id="compareBtn" type="button">Compare with Excel workbook</button>
+      </div>
+      <p class="hint">Reads .xlsx, .xlsm and .csv, or drop a file anywhere on the page. Files are read in your browser and are not uploaded.</p>
+      <input type="file" id="fileData" accept=".xlsx,.xlsm,.csv,.txt" hidden>
+      <input type="file" id="fileRef" accept=".xlsx,.xlsm,.csv,.txt" hidden>
+    </div>
+  </header>
+
+  <div class="sources">
+    <div class="src"><span class="k">Data</span><b id="dataName">none yet</b><span class="meta" id="dataMeta"></span><span class="tag" id="dataTag"></span></div>
+    <div class="src"><span class="k">Compared with</span><b id="refName">nothing yet</b><span class="meta" id="refMeta"></span><button class="linkbtn" id="refClear" type="button" hidden>Remove</button></div>
+  </div>
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="ledger" aria-label="Summary row">
+    <div class="tile">
+      <div class="lab"><span>MAE</span><code id="maeAddr">H, row n+1</code></div>
+      <div class="big blank" id="maeVal">&mdash;</div>
+      <div class="f" id="maeF">=SUM(H2:Hn)/COUNTA(H2:Hn)</div>
+      <div class="saved" id="maeSaved"></div>
+    </div>
+    <div class="tile">
+      <div class="lab"><span>RMSE</span><code id="rmseAddr">J, row n+1</code></div>
+      <div class="big blank" id="rmseVal">&mdash;</div>
+      <div class="f" id="rmseF">=SQRT(SUM(J2:Jn)/COUNTA(J2:Jn))</div>
+      <div class="saved" id="rmseSaved"></div>
+    </div>
+    <div class="tile">
+      <div class="lab"><span>Data rows</span><code id="rowsAddr">COUNTA(H2:Hn)</code></div>
+      <div class="big blank" id="rowsVal">&mdash;</div>
+      <div class="f" id="rowsF">n is the last data row of the file you import</div>
+    </div>
+    <div class="tile">
+      <div class="lab"><span>Check against Excel</span></div>
+      <div class="big state none" id="checkState"><span class="dot"></span><span id="checkText">Not compared</span></div>
+      <div class="saved" id="checkMeta">Import a just-data file first.</div>
+      <div><button class="btn small" id="checkBtn" type="button" hidden>Compare with Excel workbook</button></div>
+    </div>
+  </section>
+
+  <section class="work" aria-label="Sheet">
+    <div class="fbar">
+      <input class="namebox" id="namebox" aria-label="Cell address. Type one, such as H2, and press Enter to go there" spellcheck="false" autocomplete="off" value="" disabled>
+      <span class="fx" aria-hidden="true">fx</span>
+      <div class="ftext" id="ftext"></div>
+    </div>
+    <div class="fvalue" id="fvalue"><span><span class="k">Value</span>no data yet</span></div>
+    <div class="toolbar">
+      <span class="tlabel" id="modeLabel">Display</span>
+      <div class="seg" role="radiogroup" aria-labelledby="modeLabel">
+        <button type="button" role="radio" aria-checked="true" data-mode="excel" id="modeExcel">Excel format</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="full" id="modeFull">Full precision</button>
+      </div>
+      <label class="chk" id="onlyDiffWrap" hidden><input type="checkbox" id="onlyDiff"> Only rows that differ</label>
+      <span class="spacer"></span>
+      <button class="btn small" id="exportBtn" type="button" hidden>Export CSV</button>
+    </div>
+    <div class="scroll" id="scroll" tabindex="0" role="grid" aria-label="Computed sheet. Use the arrow keys to move between cells." aria-readonly="true">
+      <div class="sheet" id="sheet">
+        <div class="chead" id="chead" role="row"></div>
+        <div class="sbody" id="sbody">
+          <div class="win" id="win"></div>
+          <div class="spillbox" id="spillbox" hidden></div>
+          <div class="selbox" id="selbox" hidden></div>
+        </div>
+      </div>
+      <div class="sheet-empty" id="sheetEmpty">
+        <h2>Import a just-data file to fill the sheet</h2>
+        <p>Row 1 holds the headers <code>y_pred</code>, <code>y_actual</code> and <code>X_actual</code>, with one prediction per row below it. The arrays are written in brackets, the way Python prints them.</p>
+        <div class="ex-wrap">
+          <table class="ex">
+            <caption>Example of the expected layout</caption>
+            <thead><tr><th></th><th>A</th><th>B</th><th>C</th></tr></thead>
+            <tbody>
+              <tr><th>1</th><td>y_pred</td><td>y_actual</td><td>X_actual</td></tr>
+              <tr><th>2</th><td>[101.25]</td><td class="n">100.5</td><td>[[99.75], [100.25], [101.0]]</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" id="emptyImport" type="button">Import just-data file</button>
+          <button class="btn" id="emptyCompare" type="button">Add Excel workbook to compare</button>
+        </div>
+        <p class="fine">Columns D to J then fill with the split arrays, the error, its size and its square, and MAE and RMSE appear in the row below the data.</p>
+        <p class="empty-err" id="emptyErr" role="alert" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div class="card">
+      <h2 id="traceTitle">Step by step</h2>
+      <p class="sub" id="traceSub">After you import a file, select any cell to see how Excel arrives at its row: the arrays split into text, the text read as a number, the error, its size and its square.</p>
+      <dl class="trace" id="trace"></dl>
+    </div>
+    <div class="card">
+      <h2>Formulas in the sheet</h2>
+      <p class="sub" id="ftableSub">The same formulas as the workbook. Here n is the last data row; the real row numbers appear when you import a file.</p>
+      <div class="ftable-wrap"><table class="ftable"><thead><tr><th>Cells</th><th>Formula</th><th>Result</th></tr></thead><tbody id="ftable"></tbody></table></div>
+      <h3>Why the values match Excel exactly</h3>
+      <ul class="rules" id="rules"></ul>
+    </div>
+  </section>
+</div>
+<div class="drop" id="drop" hidden><div>Drop to import<small>.xlsx, .xlsm or .csv with y_pred, y_actual and X_actual</small></div></div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script>
+/* ==========================================================================
+   Excel arithmetic + sheet model for the L4 predictions workbook.
+   Reproduces, cell for cell, what Excel stores for:
+     D:F  =TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(C2,"[",""),"]","")," ",""),",",,1)
+     G    =TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(A2,"[",""),"]","")," ",""),",",,1)
+     H    =ABS(B2-G2)      I  =B2-G2      J  =I2^2
+     H{n+1} =SUM(H2:Hn)/COUNTA(H2:Hn)     J{n+1} =SQRT(SUM(J2:Jn)/COUNTA(J2:Jn))
+   ========================================================================== */
+const XL = (() => {
+  class XlError {
+    constructor(code) { this.code = code; }
+    toString() { return this.code; }
+  }
+  const isErr = (v) => v instanceof XlError;
+  const ERR = {
+    VALUE: new XlError('#VALUE!'),
+    CALC: new XlError('#CALC!'),
+    NUM: new XlError('#NUM!'),
+    DIV0: new XlError('#DIV/0!'),
+  };
+  const errorOf = (code) =>
+    Object.values(ERR).find((e) => e.code === code) || new XlError(code);
+
+  /* Text -> number, the way Excel coerces text in arithmetic (and when it
+     opens a CSV): only the first 15 significant digits are kept, the rest are
+     dropped (truncated, not rounded), then the decimal is converted to the
+     nearest double.  "12.345678901234567" -> 12.3456789012345            */
+  const NUM_RE = /^[ \t]*([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?[ \t]*$/;
+  function textToNumber(text, keep15 = true) {
+    const m = NUM_RE.exec(text);
+    if (!m) return ERR.VALUE;
+    const intDigits = m[2] || '';
+    const fracDigits = m[3] || '';
+    if (!intDigits && !fracDigits) return ERR.VALUE;
+    if (!keep15) {
+      const v = parseFloat(text);
+      return Number.isFinite(v) ? (v === 0 ? 0 : v) : ERR.NUM;
+    }
+    let digits = intDigits + fracDigits;
+    let exp = (m[4] ? parseInt(m[4], 10) : 0) - fracDigits.length;
+    let i = 0;
+    while (i < digits.length - 1 && digits[i] === '0') i++;
+    digits = digits.slice(i);
+    if (/^0+$/.test(digits)) return 0;
+    if (digits.length > 15) {
+      exp += digits.length - 15;
+      digits = digits.slice(0, 15);
+    }
+    const v = parseFloat((m[1] === '-' ? '-' : '') + digits + 'e' + exp);
+    if (!Number.isFinite(v)) return ERR.NUM;
+    return v === 0 ? 0 : v;
+  }
+  const looksNumeric = (s) => {
+    const m = NUM_RE.exec(s);
+    return !!m && !!((m[2] || '') + (m[3] || ''));
+  };
+
+  /* Operand coercion used by + - * / ^ */
+  function toNum(v, keep15 = true) {
+    if (typeof v === 'number') return v;
+    if (v == null) return 0;
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    if (isErr(v)) return v;
+    return textToNumber(String(v), keep15);
+  }
+
+  /* Number -> text, as Excel does inside text functions (15 significant digits) */
+  function textOf(v) {
+    if (typeof v === 'string') return v;
+    if (v == null) return '';
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+    if (typeof v === 'number') return general15(v);
+    return String(v);
+  }
+
+  /* TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(x,"[",""),"]","")," ",""),",",,1)
+     -> array of text pieces (ignore_empty = TRUE), or #CALC! when nothing is left */
+  function splitArray(v) {
+    if (isErr(v)) return v;
+    const s = textOf(v).split('[').join('').split(']').join('').split(' ').join('');
+    const parts = s.split(',').filter((p) => p.length > 0);
+    return parts.length ? parts : ERR.CALC;
+  }
+
+  /* x^2 exactly as Excel stores it.  Excel's power operator multiplies in the
+     x87 80-bit format (64-bit significand) and then stores a 64-bit double, so
+     the product is rounded twice.  When the first rounding lands exactly on the
+     midpoint between two doubles, the second one goes to the even neighbour,
+     one unit below what a single IEEE multiply gives.                         */
+  const dv = new DataView(new ArrayBuffer(8));
+  function step(x, up) {
+    dv.setFloat64(0, x);
+    let hi = dv.getUint32(0);
+    let lo = dv.getUint32(4);
+    if (up) {
+      lo = (lo + 1) >>> 0;
+      if (lo === 0) hi = (hi + 1) >>> 0;
+    } else {
+      if (lo === 0) hi = (hi - 1) >>> 0;
+      lo = (lo - 1) >>> 0;
+    }
+    dv.setUint32(0, hi);
+    dv.setUint32(4, lo);
+    return dv.getFloat64(0);
+  }
+  function isOddSignificand(x) {
+    dv.setFloat64(0, x);
+    return (dv.getUint32(4) & 1) === 1;
+  }
+  function productError(a, b, p) {
+    const SPLIT = 134217729; // 2^27 + 1 (Veltkamp split, Dekker's exact product)
+    let t = SPLIT * a;
+    const ah = t - (t - a);
+    const al = a - ah;
+    t = SPLIT * b;
+    const bh = t - (t - b);
+    const bl = b - bh;
+    return ((ah * bh - p) + ah * bl + al * bh) + al * bl;
+  }
+  function square(x, x87 = true) {
+    const p = x * x;
+    if (!x87 || p === 0 || !Number.isFinite(p) || p < 1e-280 || p > 1e280) return p;
+    const err = productError(x, x, p); // exact: x*x = p + err
+    if (err === 0) return p;
+    const q = step(p, err > 0); // the other double next to the exact product
+    const gap = Math.abs(q - p);
+    // 80-bit rounding hits the midpoint when the exact product is within half
+    // an 80-bit unit (gap / 4096) of it; ties then go to the even significand.
+    if (gap / 2 - Math.abs(err) <= gap / 4096 && isOddSignificand(p)) return q;
+    return p;
+  }
+
+  /* ---------- display formats ---------- */
+  function decompose(expStr) {
+    const m = /^(-?)(\d)(?:\.(\d+))?e([+-]\d+)$/.exec(expStr);
+    const digits = (m[2] + (m[3] || '')).replace(/0+$/, '') || '0';
+    return { neg: m[1] === '-', digits, exp: parseInt(m[4], 10) };
+  }
+  function placeDecimal(digits, exp) {
+    if (exp >= 0) {
+      const int = digits.length > exp + 1 ? digits.slice(0, exp + 1) : digits.padEnd(exp + 1, '0');
+      const frac = digits.slice(exp + 1);
+      return frac ? int + '.' + frac : int;
+    }
+    return '0.' + '0'.repeat(-exp - 1) + digits;
+  }
+  function scientific(neg, digits, exp) {
+    const mant = digits.length > 1 ? digits[0] + '.' + digits.slice(1) : digits;
+    const e = Math.abs(exp);
+    return (neg ? '-' : '') + mant + 'E' + (exp < 0 ? '-' : '+') + (e < 10 ? '0' + e : String(e));
+  }
+  function layout({ neg, digits, exp }) {
+    // Fixed notation while it stays readable (Excel switches to E-notation
+    // for 16+ integer digits, or when the fixed form gets too long).
+    if (exp >= 15) return scientific(neg, digits, exp);
+    const fx = placeDecimal(digits, exp);
+    if (fx.length > 20) return scientific(neg, digits, exp);
+    return (neg ? '-' : '') + fx;
+  }
+  /* General format: Excel shows at most 15 significant digits */
+  function general15(v) {
+    if (v === 0) return '0';
+    if (!Number.isFinite(v)) return '#NUM!';
+    return layout(decompose(v.toExponential(14)));
+  }
+  /* Full stored value: shortest decimal that reads back as the same double */
+  function full(v) {
+    if (v === 0) return '0';
+    if (!Number.isFinite(v)) return '#NUM!';
+    return layout(decompose(v.toExponential()));
+  }
+  /* Fixed decimals ("0.0000"): Excel rounds its 15-digit value half away from zero */
+  function fixed(v, d) {
+    if (!Number.isFinite(v)) return '#NUM!';
+    if (v === 0) return d > 0 ? '0.' + '0'.repeat(d) : '0';
+    const { neg, digits, exp } = decompose(v.toExponential(14));
+    let intPart;
+    let fracPart;
+    if (exp >= 0) {
+      intPart = digits.length > exp + 1 ? digits.slice(0, exp + 1) : digits.padEnd(exp + 1, '0');
+      fracPart = digits.slice(exp + 1);
+    } else {
+      intPart = '0';
+      fracPart = '0'.repeat(-exp - 1) + digits;
+    }
+    let n = BigInt(intPart + fracPart.slice(0, d).padEnd(d, '0'));
+    if ((fracPart.charCodeAt(d) || 48) - 48 >= 5) n += 1n;
+    const s = n.toString().padStart(d + 1, '0');
+    const out = d > 0 ? s.slice(0, -d) + '.' + s.slice(-d) : s;
+    return (neg && n !== 0n ? '-' : '') + out;
+  }
+
+  return {
+    XlError, isErr, ERR, errorOf, textToNumber, looksNumeric, toNum, textOf,
+    splitArray, square, general15, full, fixed,
+  };
+})();
+
+/* ==========================================================================
+   Sheet model: lays the formulas out exactly like the workbook and evaluates
+   every cell.  With 3-value X arrays and 1-value predictions this is A:J and
+   the summary row, the same as the .xlsx; longer arrays spill further right
+   and the later columns move with them.
+   ========================================================================== */
+const Sheet = (() => {
+  const { isErr, ERR } = XL;
+
+  function colName(i) {
+    let s = '';
+    let n = i + 1;
+    while (n > 0) {
+      const m = (n - 1) % 26;
+      s = String.fromCharCode(65 + m) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
+  }
+  function parseAddress(text) {
+    const m = /^\s*\$?([A-Za-z]{0,3})\$?(\d+)\s*$/.exec(text || '');
+    if (!m) return null;
+    let c = -1;
+    if (m[1]) {
+      c = 0;
+      for (const ch of m[1].toUpperCase()) c = c * 26 + (ch.charCodeAt(0) - 64);
+      c -= 1;
+    }
+    return { c, r: parseInt(m[2], 10) };
+  }
+
+  /* Evaluate the formula columns for one set of input rows. */
+  function evaluate(rows, opts = {}) {
+    const keep15 = opts.keep15 !== false;
+    const x87 = opts.x87 !== false;
+    const n = rows.length;
+    const xTok = new Array(n);
+    const pTok = new Array(n);
+    const H = new Array(n);
+    const I = new Array(n);
+    const J = new Array(n);
+    let N = 1;
+    let K = 1;
+    for (let i = 0; i < n; i++) {
+      const row = rows[i];
+      const xs = XL.splitArray(row.c);
+      const ps = XL.splitArray(row.a);
+      xTok[i] = xs;
+      pTok[i] = ps;
+      if (Array.isArray(xs) && xs.length > N) N = xs.length;
+      if (Array.isArray(ps) && ps.length > K) K = ps.length;
+      // G is the top-left cell of the y_pred spill: its first piece (text)
+      const g = Array.isArray(ps) ? ps[0] : ps;
+      const b = XL.toNum(row.b, keep15);
+      const gv = XL.toNum(g, keep15);
+      let diff;
+      if (isErr(b)) diff = b;
+      else if (isErr(gv)) diff = gv;
+      else diff = b - gv;
+      if (!isErr(diff) && !Number.isFinite(diff)) diff = ERR.NUM;
+      I[i] = diff;
+      H[i] = isErr(diff) ? diff : Math.abs(diff);
+      if (isErr(diff)) J[i] = diff;
+      else {
+        const sq = XL.square(diff, x87);
+        J[i] = Number.isFinite(sq) ? sq : ERR.NUM;
+      }
+    }
+    // SUM adds left to right in double precision; COUNTA counts every cell
+    // that holds a formula (errors included).
+    const agg = (arr) => {
+      let s = 0;
+      for (let i = 0; i < arr.length; i++) {
+        const v = arr[i];
+        if (isErr(v)) return v;
+        s += v;
+      }
+      return s;
+    };
+    let mae;
+    let rmse;
+    const sumH = agg(H);
+    const sumJ = agg(J);
+    if (n === 0) {
+      mae = ERR.DIV0;
+      rmse = ERR.DIV0;
+    } else {
+      mae = isErr(sumH) ? sumH : sumH / n;
+      if (isErr(sumJ)) rmse = sumJ;
+      else {
+        const q = sumJ / n;
+        rmse = q < 0 ? ERR.NUM : Math.sqrt(q);
+      }
+    }
+    return { n, N, K, xTok, pTok, H, I, J, mae, rmse, sumH, sumJ };
+  }
+
+  /* Build the full sheet model. input = {headers:[A1,B1,C1], rows:[{a,b,c}]} */
+  function build(input, ref) {
+    const ev = evaluate(input.rows);
+    const { n, N, K } = ev;
+    const C = {
+      A: 0, B: 1, C: 2,
+      X0: 3, // first X piece (D)
+      P0: 3 + N, // first y_pred piece (G)
+      ABS: 3 + N + K, // H
+      DIFF: 4 + N + K, // I
+      SQ: 5 + N + K, // J
+    };
+    const ncols = C.SQ + 1;
+    const lastRow = n + 1; // row 1 holds the headers
+    const sumRow = n + 2;
+    const L = {
+      G: colName(C.P0), H: colName(C.ABS), I: colName(C.DIFF), J: colName(C.SQ),
+    };
+    const f = {
+      xSplit: (r) => `=TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(C${r},"[",""),"]","")," ",""),",",,1)`,
+      pSplit: (r) => `=TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(A${r},"[",""),"]","")," ",""),",",,1)`,
+      abs: (r) => `=ABS(B${r}-${L.G}${r})`,
+      diff: (r) => `=B${r}-${L.G}${r}`,
+      sq: (r) => `=${L.I}${r}^2`,
+      mae: () => `=SUM(${L.H}2:${L.H}${lastRow})/COUNTA(${L.H}2:${L.H}${lastRow})`,
+      rmse: () => `=SQRT(SUM(${L.J}2:${L.J}${lastRow})/COUNTA(${L.J}2:${L.J}${lastRow}))`,
+    };
+
+    /* One cell: {v, fmt, formula, spill, input} */
+    function cell(r, c) {
+      const out = { v: null, fmt: 'general', formula: null, spill: null, input: false };
+      if (r === 1) {
+        if (c <= 2) {
+          out.v = input.headers[c] ?? null;
+          out.input = true;
+        }
+        return out;
+      }
+      if (r === sumRow) {
+        if (c === C.ABS) { out.v = ev.mae; out.formula = f.mae(); }
+        else if (c === C.SQ) { out.v = ev.rmse; out.formula = f.rmse(); }
+        return out;
+      }
+      if (r < 2 || r > lastRow) return out;
+      const i = r - 2;
+      const row = input.rows[i];
+      if (c === C.A) { out.v = row.a ?? null; out.input = true; return out; }
+      if (c === C.B) { out.v = row.b ?? null; out.input = true; return out; }
+      if (c === C.C) { out.v = row.c ?? null; out.input = true; return out; }
+      if (c >= C.X0 && c < C.P0) {
+        return spillCell(out, ev.xTok[i], c - C.X0, C.X0, r, f.xSplit(r));
+      }
+      if (c >= C.P0 && c < C.ABS) {
+        return spillCell(out, ev.pTok[i], c - C.P0, C.P0, r, f.pSplit(r));
+      }
+      if (c === C.ABS) { out.v = ev.H[i]; out.formula = f.abs(r); return out; }
+      if (c === C.DIFF) { out.v = ev.I[i]; out.formula = f.diff(r); return out; }
+      if (c === C.SQ) { out.v = ev.J[i]; out.formula = f.sq(r); out.fmt = '0.0000'; return out; }
+      return out;
+    }
+    function spillCell(out, tokens, j, anchor, r, formula) {
+      if (isErr(tokens)) {
+        if (j === 0) { out.v = tokens; out.formula = formula; }
+        return out;
+      }
+      if (j >= tokens.length) return out; // this row's array is shorter
+      out.v = tokens[j];
+      out.fmt = 'text';
+      out.formula = formula;
+      out.spill = { anchor, from: anchor, to: anchor + tokens.length - 1, r, child: j > 0 };
+      return out;
+    }
+
+    const model = {
+      n, N, K, C, ncols, lastRow, sumRow, colName, cell, ev, input,
+      mae: ev.mae, rmse: ev.rmse,
+      ref: ref || null,
+      verify: null,
+    };
+    if (ref) model.verify = verify(model, ref);
+    return model;
+  }
+
+  function same(a, b) {
+    if (a == null || b == null) return a == b;
+    if (XL.isErr(a) || XL.isErr(b)) return XL.isErr(a) && XL.isErr(b) && a.code === b.code;
+    return typeof a === typeof b && a === b;
+  }
+
+  /* Compare every computed cell with the value Excel saved for it. */
+  function verify(model, ref) {
+    const { C, lastRow, sumRow, ncols, colName } = model;
+    const diffs = new Map(); // address -> {r, c, mine, excel}
+    const diffRows = new Set();
+    let cells = 0;
+    let missing = 0;
+    const check = (r, c) => {
+      const addr = colName(c) + r;
+      const has = ref.cells.has(addr);
+      const mine = model.cell(r, c).v;
+      if (!has) {
+        if (mine != null) missing++;
+        return;
+      }
+      const excel = ref.cells.get(addr);
+      cells++;
+      if (!same(mine, excel)) {
+        diffs.set(addr, { r, c, mine, excel });
+        diffRows.add(r);
+      }
+    };
+    for (let r = 2; r <= lastRow; r++) {
+      for (let c = C.X0; c < ncols; c++) check(r, c);
+    }
+    check(sumRow, C.ABS);
+    check(sumRow, C.SQ);
+    // Inputs should be the same data; count rows that are not.
+    let inputDiffRows = 0;
+    if (ref.external) {
+      for (let r = 2; r <= lastRow; r++) {
+        for (let c = 0; c < 3; c++) {
+          const addr = colName(c) + r;
+          if (!same(model.cell(r, c).v, ref.cells.has(addr) ? ref.cells.get(addr) : null)) {
+            inputDiffRows++;
+            break;
+          }
+        }
+      }
+    }
+    return {
+      source: ref.source, external: !!ref.external, cells, missing, diffs, diffRows,
+      inputDiffRows, rowsCompared: lastRow - 1,
+    };
+  }
+
+  /* How many results Excel would NOT match if one of its rules were dropped. */
+  function ablation(input, ref, model) {
+    if (!ref || !model.verify || model.verify.cells === 0) return null;
+    const { C, colName } = model;
+    const get = (addr) => (ref.cells.has(addr) ? ref.cells.get(addr) : undefined);
+    const plain = evaluate(input.rows, { keep15: false });
+    const noX87 = evaluate(input.rows, { x87: false });
+    let rowsPlainOk = 0;
+    let rowsTotal = 0;
+    let sqOk = 0;
+    let sqTotal = 0;
+    for (let i = 0; i < model.n; i++) {
+      const r = i + 2;
+      const h = get(colName(C.ABS) + r);
+      const d = get(colName(C.DIFF) + r);
+      const s = get(colName(C.SQ) + r);
+      if (h !== undefined && d !== undefined && s !== undefined) {
+        rowsTotal++;
+        if (same(plain.H[i], h) && same(plain.I[i], d) && same(plain.J[i], s)) rowsPlainOk++;
+      }
+      if (s !== undefined) {
+        sqTotal++;
+        if (same(noX87.J[i], s)) sqOk++;
+      }
+    }
+    return {
+      rowsTotal, rowsPlainOk, sqTotal, sqOk,
+      plainMae: plain.mae, plainRmse: plain.rmse,
+      noX87Rmse: noX87.rmse,
+    };
+  }
+
+  return { build, evaluate, verify, ablation, colName, parseAddress, same };
+})();
+
+if (typeof module !== 'undefined') module.exports = { XL, Sheet };
+
+/* ==========================================================================
+   Workbook reader: .xlsx / .xlsm (ZIP + XML) and .csv, no libraries.
+   Numbers are taken exactly as Excel stored them; a CSV is read the way
+   Excel opens one (numbers keep 15 significant digits).
+   ========================================================================== */
+const Book = (() => {
+  const td = new TextDecoder('utf-8');
+  const NS_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+  /* ---------- ZIP ---------- */
+  function readZipIndex(u8) {
+    const view = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    let eocd = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) {
+      if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('not-zip');
+    const count = view.getUint16(eocd + 10, true);
+    let p = view.getUint32(eocd + 16, true);
+    const entries = new Map();
+    for (let k = 0; k < count; k++) {
+      if (view.getUint32(p, true) !== 0x02014b50) throw new Error('bad-zip');
+      const method = view.getUint16(p + 10, true);
+      const csize = view.getUint32(p + 20, true);
+      const size = view.getUint32(p + 24, true);
+      const nlen = view.getUint16(p + 28, true);
+      const xlen = view.getUint16(p + 30, true);
+      const clen = view.getUint16(p + 32, true);
+      const offset = view.getUint32(p + 42, true);
+      const name = td.decode(u8.subarray(p + 46, p + 46 + nlen));
+      entries.set(name, { method, csize, size, offset });
+      p += 46 + nlen + xlen + clen;
+    }
+    return { view, entries };
+  }
+  let fflateLib = null;
+  async function inflateRaw(data) {
+    if (typeof DecompressionStream === 'function') {
+      try {
+        const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        return new Uint8Array(await new Response(stream).arrayBuffer());
+      } catch (e) {
+        if (!(e instanceof TypeError)) throw e; // 'deflate-raw' unsupported -> fallback
+      }
+    }
+    if (!fflateLib) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('no-inflate'));
+        document.head.appendChild(s);
+      });
+      fflateLib = window.fflate;
+    }
+    return fflateLib.inflateSync(data);
+  }
+  async function zipText(zip, u8, name) {
+    const e = zip.entries.get(name);
+    if (!e) return null;
+    const v = zip.view;
+    if (v.getUint32(e.offset, true) !== 0x04034b50) throw new Error('bad-zip');
+    const start = e.offset + 30 + v.getUint16(e.offset + 26, true) + v.getUint16(e.offset + 28, true);
+    const raw = u8.subarray(start, start + e.csize);
+    let bytes;
+    if (e.method === 0) bytes = raw;
+    else if (e.method === 8) bytes = await inflateRaw(raw);
+    else throw new Error('zip-method');
+    return td.decode(bytes);
+  }
+
+  /* ---------- XML helpers ---------- */
+  const xml = (text) => {
+    const doc = new DOMParser().parseFromString(text, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('bad-xml');
+    return doc;
+  };
+  const all = (node, local) => node.getElementsByTagNameNS('*', local);
+  const kids = (node, local) => {
+    const out = [];
+    for (let ch = node.firstElementChild; ch; ch = ch.nextElementSibling) {
+      if (ch.localName === local) out.push(ch);
+    }
+    return out;
+  };
+  function richText(node) {
+    // concatenate <t> runs, skipping phonetic guides (<rPh>)
+    let s = '';
+    for (const t of all(node, 't')) {
+      if (t.parentNode && t.parentNode.localName === 'rPh') continue;
+      s += t.textContent;
+    }
+    return s;
+  }
+  function relId(el) {
+    const v = el.getAttributeNS(NS_REL, 'id');
+    if (v) return v;
+    for (const a of el.attributes) if (a.localName === 'id' && a.prefix) return a.value;
+    return el.getAttribute('r:id');
+  }
+  function resolveTarget(target) {
+    if (!target) return null;
+    if (target.startsWith('/')) return target.slice(1);
+    const parts = ('xl/' + target).split('/');
+    const out = [];
+    for (const p of parts) {
+      if (p === '..') out.pop();
+      else if (p && p !== '.') out.push(p);
+    }
+    return out.join('/');
+  }
+  const decodeAddr = (a) => {
+    let i = 0;
+    let c = 0;
+    while (i < a.length && a.charCodeAt(i) >= 65) {
+      c = c * 26 + (a.charCodeAt(i) - 64);
+      i++;
+    }
+    return { c: c - 1, r: parseInt(a.slice(i), 10) };
+  };
+
+  /* A grid of typed values: string | number | boolean | XlError */
+  function makeGrid(name) {
+    const rows = new Map();
+    return {
+      name,
+      rows,
+      formulas: 0,
+      set(r, c, v) {
+        if (v == null) return;
+        let row = rows.get(r);
+        if (!row) rows.set(r, (row = new Map()));
+        row.set(c, v);
+      },
+      get(r, c) {
+        const row = rows.get(r);
+        return row && row.has(c) ? row.get(c) : null;
+      },
+    };
+  }
+
+  async function readXlsx(u8) {
+    const zip = readZipIndex(u8);
+    const wbXml = await zipText(zip, u8, 'xl/workbook.xml');
+    if (!wbXml) throw new Error('not-xlsx');
+    const wb = xml(wbXml);
+    const relsXml = await zipText(zip, u8, 'xl/_rels/workbook.xml.rels');
+    const rels = new Map();
+    let sstPath = 'xl/sharedStrings.xml';
+    if (relsXml) {
+      for (const rel of all(xml(relsXml), 'Relationship')) {
+        const target = rel.getAttribute('TargetMode') === 'External' ? null : resolveTarget(rel.getAttribute('Target'));
+        rels.set(rel.getAttribute('Id'), target);
+        if ((rel.getAttribute('Type') || '').endsWith('/sharedStrings') && target) sstPath = target;
+      }
+    }
+    const strings = [];
+    const sstXml = await zipText(zip, u8, sstPath);
+    if (sstXml) for (const si of all(xml(sstXml), 'si')) strings.push(richText(si));
+
+    const sheets = [];
+    const sheetEls = [...all(wb, 'sheet')];
+    for (let k = 0; k < sheetEls.length; k++) {
+      const el = sheetEls[k];
+      const path = rels.get(relId(el)) || `xl/worksheets/sheet${k + 1}.xml`;
+      sheets.push({ name: el.getAttribute('name') || `Sheet${k + 1}`, path });
+    }
+    if (!sheets.length) sheets.push({ name: 'Sheet1', path: 'xl/worksheets/sheet1.xml' });
+
+    const grids = [];
+    for (const s of sheets) {
+      const text = await zipText(zip, u8, s.path);
+      if (!text) continue;
+      grids.push(readSheetXml(text, strings, s.name));
+    }
+    return grids;
+  }
+
+  function readSheetXml(text, strings, name) {
+    const doc = xml(text);
+    const grid = makeGrid(name);
+    let rIdx = 0;
+    for (const row of all(doc, 'row')) {
+      const ra = row.getAttribute('r');
+      rIdx = ra ? parseInt(ra, 10) : rIdx + 1;
+      let cIdx = -1;
+      for (const c of kids(row, 'c')) {
+        const ref = c.getAttribute('r');
+        let r = rIdx;
+        if (ref) {
+          const a = decodeAddr(ref);
+          cIdx = a.c;
+          r = a.r;
+        } else cIdx += 1;
+        const t = c.getAttribute('t') || 'n';
+        const fEl = kids(c, 'f')[0];
+        const vEl = kids(c, 'v')[0];
+        if (fEl) grid.formulas++;
+        let v = null;
+        if (t === 'inlineStr') {
+          const is = kids(c, 'is')[0];
+          v = is ? richText(is) : null;
+        } else if (vEl) {
+          const raw = vEl.textContent;
+          if (t === 's') v = strings[parseInt(raw, 10)] ?? '';
+          else if (t === 'str' || t === 'd') v = raw;
+          else if (t === 'b') v = raw === '1' || raw === 'true';
+          else if (t === 'e') v = XL.errorOf(raw);
+          else v = raw === '' ? null : parseFloat(raw);
+        }
+        grid.set(r, cIdx, v);
+      }
+    }
+    return grid;
+  }
+
+  /* ---------- CSV, opened the way Excel opens it ---------- */
+  function readCsv(text, name) {
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+    const firstLine = text.slice(0, text.search(/\r?\n|$/));
+    const count = (ch) => {
+      let n = 0;
+      let q = false;
+      for (const x of firstLine) {
+        if (x === '"') q = !q;
+        else if (!q && x === ch) n++;
+      }
+      return n;
+    };
+    const delim = [',', ';', '\t'].map((d) => [d, count(d)]).sort((a, b) => b[1] - a[1])[0][0];
+    const grid = makeGrid(name);
+    let r = 1;
+    let c = 0;
+    let field = '';
+    let quoted = false;
+    let wasQuoted = false;
+    const push = () => {
+      let v = field;
+      if (v === '' && !wasQuoted) v = null;
+      else if (XL.looksNumeric(v)) v = XL.textToNumber(v);
+      grid.set(r, c, v);
+      field = '';
+      wasQuoted = false;
+      c++;
+    };
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (quoted) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else quoted = false;
+        } else field += ch;
+      } else if (ch === '"') {
+        quoted = true;
+        wasQuoted = true;
+      } else if (ch === delim) push();
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        push();
+        r++;
+        c = 0;
+      } else field += ch;
+    }
+    if (field !== '' || c > 0) push();
+    return [grid];
+  }
+
+  /* ---------- entry point ---------- */
+  async function read(name, bytes) {
+    const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    const isZip = u8.length > 4 && u8[0] === 0x50 && u8[1] === 0x4b;
+    const isOle = u8.length > 8 && u8[0] === 0xd0 && u8[1] === 0xcf && u8[2] === 0x11 && u8[3] === 0xe0;
+    if (isOle) throw new Error('xls');
+    if (isZip) return { kind: 'xlsx', grids: await readXlsx(u8) };
+    return { kind: 'csv', grids: readCsv(td.decode(u8), name.replace(/\.[^.]+$/, '')) };
+  }
+
+  /* Pick the sheet and the y_pred / y_actual / X_actual columns. */
+  const WANT = ['y_pred', 'y_actual', 'x_actual'];
+  function locate(grids) {
+    for (const g of grids) {
+      const row1 = g.rows.get(1);
+      if (!row1) continue;
+      const found = WANT.map((w) => {
+        for (const [c, v] of row1) if (typeof v === 'string' && v.trim().toLowerCase() === w) return c;
+        return -1;
+      });
+      if (found.every((c) => c >= 0)) return { grid: g, map: found, byHeader: true };
+    }
+    const g = grids.find((x) => x.rows.size > 0) || grids[0];
+    return { grid: g, map: [0, 1, 2], byHeader: false };
+  }
+
+  /* Turn a workbook into the model input (+ Excel's own saved results, if any). */
+  function toInput(book, fileName) {
+    const { grid, map, byHeader } = locate(book.grids);
+    if (!grid) throw new Error('empty');
+    const standard = map[0] === 0 && map[1] === 1 && map[2] === 2;
+    let last = 1;
+    for (const [r, row] of grid.rows) {
+      if (r < 2) continue;
+      for (const c of map) {
+        const v = row.get(c);
+        if (v != null && v !== '') { if (r > last) last = r; break; }
+      }
+    }
+    const rows = [];
+    for (let r = 2; r <= last; r++) {
+      rows.push({ a: grid.get(r, map[0]), b: grid.get(r, map[1]), c: grid.get(r, map[2]) });
+    }
+    const headers = map.map((c) => grid.get(1, c));
+    let ref = null;
+    if (standard) {
+      const cells = new Map();
+      for (const [r, row] of grid.rows) {
+        if (r < 2 || r > last + 1) continue;
+        for (const [c, v] of row) if (c >= 3 && v != null) cells.set(Sheet.colName(c) + r, v);
+      }
+      if (cells.size) ref = { source: fileName, cells, external: false };
+    }
+    return {
+      input: { headers, rows },
+      ref,
+      info: {
+        fileName, kind: book.kind, sheet: grid.name, byHeader, standard, map,
+        formulas: grid.formulas,
+      },
+    };
+  }
+
+  /* A second workbook calculated by Excel, used only for comparison. */
+  function toReference(book, fileName) {
+    const { grid } = locate(book.grids);
+    if (!grid) throw new Error('empty');
+    const cells = new Map();
+    for (const [r, row] of grid.rows) for (const [c, v] of row) cells.set(Sheet.colName(c) + r, v);
+    return { source: fileName, cells, external: true, sheet: grid.name, formulas: grid.formulas };
+  }
+
+  return { read, toInput, toReference };
+})();
+
+/* ==========================================================================
+   Page: import, virtualized sheet, formula bar, row trace, Excel check.
+   ========================================================================== */
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const els = {};
+  [
+    'importBtn', 'compareBtn', 'fileData', 'fileRef', 'dataName', 'dataMeta', 'dataTag', 'refName',
+    'refMeta', 'refClear', 'notice', 'maeAddr', 'maeVal', 'maeF', 'maeSaved', 'rmseAddr', 'rmseVal',
+    'rmseF', 'rmseSaved', 'rowsAddr', 'rowsVal', 'rowsF', 'checkState', 'checkText', 'checkMeta',
+    'checkBtn', 'namebox', 'ftext', 'fvalue', 'modeExcel', 'modeFull', 'onlyDiffWrap', 'onlyDiff',
+    'exportBtn', 'scroll', 'sheet', 'chead', 'sbody', 'win', 'spillbox', 'selbox', 'sheetEmpty',
+    'traceTitle', 'traceSub', 'trace', 'ftable', 'rules', 'drop', 'toast',
+    'emptyImport', 'emptyCompare', 'emptyErr', 'ftableSub',
+  ].forEach((id) => { els[id] = $(id); });
+
+  const RH = 26; // row height (px), matches --rh
+  const HEAD = 42; // column header height (px), matches --head
+  const fmtInt = (n) => n.toLocaleString('en-US');
+  const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const col = (c) => Sheet.colName(c);
+  const addr = (r, c) => col(c) + r;
+
+  const state = {
+    data: null, // {input, ref, info}
+    extRef: null, // a separate Excel workbook to compare with
+    model: null,
+    ablation: null,
+    mode: 'excel',
+    sel: { r: 2, c: 7 },
+    onlyDiff: false,
+    viewRows: null,
+    widths: [],
+    lefts: [],
+    win: { first: -1, last: -1 },
+  };
+  try {
+    const m = localStorage.getItem('l4wb.mode');
+    if (m === 'excel' || m === 'full') state.mode = m;
+  } catch (e) { /* storage unavailable */ }
+
+  /* ---------- formatting ---------- */
+  function show(cell, mode = state.mode) {
+    const v = cell.v;
+    if (v == null) return '';
+    if (XL.isErr(v)) return v.code;
+    if (typeof v === 'string') return v;
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+    if (mode === 'full') return XL.full(v);
+    if (cell.fmt === '0.0000') return XL.fixed(v, 4);
+    return XL.general15(v);
+  }
+  const showNum = (v, fmt) => show({ v, fmt: fmt || 'general' });
+  function exact(v) {
+    if (v == null) return 'empty';
+    if (XL.isErr(v)) return v.code;
+    if (typeof v === 'string') return '"' + v + '"';
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+    return XL.full(v);
+  }
+  function kind(cell) {
+    const v = cell.v;
+    if (v == null) return '';
+    if (XL.isErr(v) || typeof v === 'boolean') return 'e';
+    return typeof v === 'number' ? 'n' : 't';
+  }
+  function typeName(cell) {
+    const v = cell.v;
+    if (XL.isErr(v)) return 'Error';
+    if (typeof v === 'boolean') return 'Logical';
+    if (typeof v === 'string') return 'Text';
+    return cell.fmt === '0.0000' ? 'Number, format 0.0000' : 'Number, General';
+  }
+
+  /* ---------- view rows (all, or only rows that differ) ---------- */
+  const viewCount = () => (state.viewRows ? state.viewRows.length : state.model.sumRow);
+  const rowAt = (i) => (state.viewRows ? state.viewRows[i] : i + 1);
+  const indexOf = (r) => (state.viewRows ? state.viewRows.indexOf(r) : r - 1);
+
+  function computeView() {
+    const v = state.model.verify;
+    if (state.onlyDiff && v && v.diffRows.size) {
+      state.viewRows = [...v.diffRows].sort((a, b) => a - b);
+    } else {
+      state.onlyDiff = false;
+      state.viewRows = null;
+    }
+    els.onlyDiff.checked = state.onlyDiff;
+  }
+
+  /* ---------- column layout ---------- */
+  let charW = 7.5;
+  function measureChar() {
+    const s = document.createElement('span');
+    s.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;font-size:12.5px;font-family:'
+      + getComputedStyle(document.documentElement).getPropertyValue('--mono');
+    s.textContent = '0123456789'.repeat(4);
+    document.body.appendChild(s);
+    const w = s.getBoundingClientRect().width / 40;
+    s.remove();
+    if (w > 3) charW = w;
+  }
+  function caption(c) {
+    const m = state.model;
+    const { C } = m;
+    if (c <= 2) {
+      const h = m.input.headers[c];
+      return typeof h === 'string' && h.trim() ? h.trim() : ['input A', 'input B', 'input C'][c];
+    }
+    if (c >= C.X0 && c < C.P0) return m.N === 1 ? 'X_actual' : `X_actual ${c - C.X0 + 1}/${m.N}`;
+    if (c >= C.P0 && c < C.ABS) return m.K === 1 ? 'y_pred' : `y_pred ${c - C.P0 + 1}/${m.K}`;
+    if (c === C.ABS) return '|error|';
+    if (c === C.DIFF) return 'error';
+    return 'error²';
+  }
+  function layoutColumns() {
+    const m = state.model;
+    const longest = new Array(m.ncols).fill(0);
+    const total = m.sumRow;
+    const stride = total > 20000 ? Math.ceil(total / 20000) : 1;
+    const scan = (r) => {
+      for (let c = 0; c < m.ncols; c++) {
+        const len = show(m.cell(r, c)).length;
+        if (len > longest[c]) longest[c] = len;
+      }
+    };
+    for (let r = 1; r <= total; r += stride) scan(r);
+    scan(m.sumRow);
+    const widths = [Math.max(46, Math.ceil(String(m.sumRow).length * charW + 24))];
+    for (let c = 0; c < m.ncols; c++) {
+      const chars = Math.min(64, Math.max(7, longest[c], caption(c).length + 3));
+      widths.push(Math.ceil(chars * charW + 20));
+    }
+    state.widths = widths;
+    const lefts = [0];
+    for (let i = 0; i < widths.length; i++) lefts.push(lefts[i] + widths[i]);
+    state.lefts = lefts; // lefts[c + 1] is the left edge of column c
+    els.sheet.style.setProperty('--cols', widths.map((w) => w + 'px').join(' '));
+    els.sheet.style.width = lefts[lefts.length - 1] + 'px';
+  }
+
+  /* ---------- sheet rendering ---------- */
+  function renderHead() {
+    const m = state.model;
+    let h = '<div class="corner" role="columnheader"></div>';
+    for (let c = 0; c < m.ncols; c++) {
+      const fx = c >= m.C.X0 ? ' <i>fx</i>' : '';
+      h += `<div role="columnheader" data-c="${c}" class="${c === state.sel.c ? 'on' : ''}" title="${esc(caption(c))}">`
+        + `<span class="letter">${col(c)}${fx}</span><span class="cap">${esc(caption(c))}</span></div>`;
+    }
+    els.chead.innerHTML = h;
+  }
+  function highlightHead() {
+    for (const el of els.chead.children) {
+      if (el.dataset.c != null) el.classList.toggle('on', +el.dataset.c === state.sel.c);
+    }
+  }
+  function rowHtml(r) {
+    const m = state.model;
+    const diffs = m.verify ? m.verify.diffs : null;
+    const isSum = r === m.sumRow;
+    let s = `<div class="row${isSum ? ' sumrow' : ''}" role="row" data-r="${r}" aria-rowindex="${r}">`
+      + `<div class="rh${r === state.sel.r ? ' on' : ''}" role="rowheader">${r}</div>`;
+    for (let c = 0; c < m.ncols; c++) {
+      const cell = m.cell(r, c);
+      let cls = kind(cell);
+      if (isSum && cell.formula) cls += ' sum';
+      if (diffs && diffs.has(addr(r, c))) cls += ' dx';
+      const txt = show(cell);
+      s += `<div class="${cls}" role="gridcell" data-c="${c}"${r === state.sel.r && c === state.sel.c ? ' aria-selected="true"' : ''}>${esc(txt)}</div>`;
+    }
+    return s + '</div>';
+  }
+  function renderWindow(force) {
+    if (!state.model) return;
+    const top = els.scroll.scrollTop - HEAD;
+    const h = els.scroll.clientHeight;
+    const count = viewCount();
+    const first = Math.max(0, Math.floor(top / RH) - 10);
+    const last = Math.min(count, Math.ceil((top + h) / RH) + 10);
+    if (!force && first === state.win.first && last === state.win.last) return;
+    state.win = { first, last };
+    els.win.style.top = first * RH + 'px';
+    let html = '';
+    for (let i = first; i < last; i++) html += rowHtml(rowAt(i));
+    els.win.innerHTML = html;
+  }
+  function placeOverlays() {
+    const m = state.model;
+    const { r, c } = state.sel;
+    const i = indexOf(r);
+    if (i < 0) {
+      els.selbox.hidden = true;
+      els.spillbox.hidden = true;
+      return;
+    }
+    const top = i * RH;
+    Object.assign(els.selbox.style, {
+      top: top + 'px', left: state.lefts[c + 1] + 'px', width: state.widths[c + 1] + 'px', height: RH + 'px',
+    });
+    els.selbox.hidden = false;
+    const sp = m.cell(r, c).spill;
+    if (sp && sp.to > sp.from) {
+      Object.assign(els.spillbox.style, {
+        top: top + 'px',
+        left: state.lefts[sp.from + 1] + 'px',
+        width: state.lefts[sp.to + 2] - state.lefts[sp.from + 1] + 'px',
+        height: RH + 'px',
+      });
+      els.spillbox.hidden = false;
+    } else els.spillbox.hidden = true;
+  }
+  function renderSheet() {
+    renderHead();
+    els.sbody.style.height = viewCount() * RH + 'px';
+    els.sheetEmpty.hidden = true;
+    renderWindow(true);
+    placeOverlays();
+  }
+  function ensureVisible(r, c) {
+    const sc = els.scroll;
+    const i = indexOf(r);
+    if (i >= 0) {
+      const y = HEAD + i * RH;
+      if (y < sc.scrollTop + HEAD) sc.scrollTop = y - HEAD;
+      else if (y + RH > sc.scrollTop + sc.clientHeight) sc.scrollTop = y + RH - sc.clientHeight;
+    }
+    const x = state.lefts[c + 1];
+    const w = state.widths[c + 1];
+    const rhw = state.widths[0];
+    if (x < sc.scrollLeft + rhw) sc.scrollLeft = x - rhw;
+    else if (x + w > sc.scrollLeft + sc.clientWidth) sc.scrollLeft = x + w - sc.clientWidth;
+  }
+  function select(r, c, reveal) {
+    const m = state.model;
+    r = Math.max(1, Math.min(m.sumRow, r));
+    c = Math.max(0, Math.min(m.ncols - 1, c));
+    const rowChanged = r !== state.sel.r;
+    state.sel = { r, c };
+    if (reveal) ensureVisible(r, c);
+    renderWindow(true);
+    placeOverlays();
+    highlightHead();
+    renderFormulaBar();
+    if (rowChanged || !els.trace.childElementCount) renderTrace();
+  }
+
+  /* ---------- formula bar ---------- */
+  function refValue(a) {
+    const ref = state.model.ref;
+    return ref && ref.cells.has(a) ? { v: ref.cells.get(a) } : null;
+  }
+  function renderFormulaBar() {
+    const m = state.model;
+    const { r, c } = state.sel;
+    const a = addr(r, c);
+    const cell = m.cell(r, c);
+    els.namebox.value = a;
+    const child = !!(cell.spill && cell.spill.child);
+    els.ftext.classList.toggle('ghost', child);
+    if (cell.formula) els.ftext.textContent = cell.formula;
+    else if (cell.v == null) els.ftext.textContent = '';
+    else els.ftext.textContent = typeof cell.v === 'number' ? XL.general15(cell.v) : show(cell);
+    const parts = [];
+    const item = (k, html) => parts.push(`<span><span class="k">${k}</span>${html}</span>`);
+    if (cell.v == null) item('Value', '<span class="v">empty cell</span>');
+    else {
+      item('Value', `<span class="v">${esc(exact(cell.v))}</span>`);
+      item('Type', esc(typeName(cell)));
+    }
+    if (cell.spill && cell.spill.to > cell.spill.from) {
+      if (child) item('Spilled from', addr(r, cell.spill.anchor));
+      else item('Spills into', `${addr(r, cell.spill.from)}:${addr(r, cell.spill.to)}`);
+    }
+    if (cell.formula || cell.spill) {
+      const saved = refValue(a);
+      if (saved) {
+        const same = !m.verify.diffs.has(a);
+        item('Excel saved', `<span class="v">${esc(exact(saved.v))}</span> <span class="mark ${same ? 'ok' : 'bad'}">${same ? 'identical' : 'differs'}</span>`);
+      }
+    }
+    els.fvalue.innerHTML = parts.join('');
+  }
+
+  /* ---------- row trace ---------- */
+  function sigDigits(text) {
+    const m = /^[ \t]*[+-]?(\d*)(?:\.(\d*))?/.exec(text);
+    const d = ((m && m[1]) || '') + ((m && m[2]) || '');
+    return d.replace(/^0+/, '').length;
+  }
+  function renderTrace() {
+    const m = state.model;
+    const { r } = state.sel;
+    const items = [];
+    const add = (label, valHtml, whyHtml) => items.push(
+      `<div><dt>${label}</dt><dd>${valHtml ? `<div class="val">${valHtml}</div>` : ''}${whyHtml ? `<div class="why">${whyHtml}</div>` : ''}</dd></div>`,
+    );
+    const { C, ev } = m;
+    const G = col(C.P0);
+    const H = col(C.ABS);
+    const I = col(C.DIFF);
+    const J = col(C.SQ);
+    if (r >= 2 && r <= m.lastRow) {
+      const i = r - 2;
+      const row = m.input.rows[i];
+      els.traceTitle.textContent = `Row ${r}, step by step`;
+      els.traceSub.textContent = 'How Excel arrives at each value in this row. Select another cell to follow its row.';
+      const pieces = (tok, from) => (XL.isErr(tok)
+        ? `<span>${esc(tok.code)}</span>`
+        : tok.map((t, j) => `<span><b>${addr(r, from + j)}</b>${esc(t)}</span>`).join(''));
+      add(`C${r}`, esc(exact(row.c)),
+        `Remove <code>[</code>, <code>]</code> and spaces, then split at each comma. The pieces stay text and spill to the right:<div class="pieces">${pieces(ev.xTok[i], C.X0)}</div>`);
+      add(`A${r}`, esc(exact(row.a)),
+        `Split the same way. The first piece lands in ${G}${r}:<div class="pieces">${pieces(ev.pTok[i], C.P0)}</div>`);
+      const g = Array.isArray(ev.pTok[i]) ? ev.pTok[i][0] : ev.pTok[i];
+      const gv = XL.toNum(g);
+      const b = XL.toNum(row.b);
+      if (typeof g === 'string' && !XL.isErr(gv)) {
+        const sd = sigDigits(g);
+        add(`${G}${r}`, `${esc(exact(g))} &rarr; ${esc(XL.full(gv))}`,
+          sd > 15
+            ? `Arithmetic turns the text into a number. Excel keeps the first 15 significant digits and drops the other ${sd - 15}.`
+            : 'Arithmetic turns the text into a number. It has 15 or fewer significant digits, so nothing is dropped.');
+      } else {
+        add(`${G}${r}`, esc(exact(gv)), 'This piece cannot be read as a number, so the formulas that use it return an error.');
+      }
+      const dI = ev.I[i];
+      add(`${I}${r}`, XL.isErr(dI) ? esc(dI.code)
+        : `${esc(XL.isErr(b) ? b.code : XL.full(b))} &minus; ${esc(XL.full(gv))} = ${esc(XL.full(dI))}`,
+      `<code>=B${r}-${G}${r}</code>, actual minus predicted.`);
+      add(`${H}${r}`, esc(exact(ev.H[i])), `<code>=ABS(B${r}-${G}${r})</code>, the size of the error.`);
+      const dJ = ev.J[i];
+      if (XL.isErr(dJ)) add(`${J}${r}`, esc(dJ.code), `<code>=${I}${r}^2</code>`);
+      else {
+        const plain = dI * dI;
+        const note = plain === dJ
+          ? 'A plain multiply gives the same number here.'
+          : `A plain multiply gives ${esc(XL.full(plain))}. Excel squares in 80-bit precision, which rounds to ${esc(XL.full(dJ))}, one step ${dJ < plain ? 'lower' : 'higher'} in the last binary digit. The page stores Excel's value.`;
+        add(`${J}${r}`, `${esc(XL.full(dJ))} <span class="why">shown as ${esc(XL.fixed(dJ, 4))}</span>`, `<code>=${I}${r}^2</code>. ${note}`);
+      }
+    } else if (r === m.sumRow) {
+      els.traceTitle.textContent = `Row ${r}, the summary row`;
+      els.traceSub.textContent = 'MAE and RMSE over every data row.';
+      const n = m.n;
+      const sH = ev.sumH;
+      const sJ = ev.sumJ;
+      add(`${H}${r}`, XL.isErr(m.mae) ? esc(m.mae.code)
+        : `${esc(XL.full(sH))} &divide; ${fmtInt(n)} = ${esc(XL.full(m.mae))}`,
+      `MAE. <code>SUM(${H}2:${H}${m.lastRow})</code> adds the ${fmtInt(n)} values of ${H} from top to bottom, and <code>COUNTA</code> counts the ${fmtInt(n)} formula cells.`);
+      if (!XL.isErr(m.rmse)) {
+        add(`${J}${r}`, `&radic;(${esc(XL.full(sJ))} &divide; ${fmtInt(n)}) = ${esc(XL.full(m.rmse))}`,
+          `RMSE. The same sum over ${J}, divided by the count, then <code>SQRT</code>.`);
+      } else add(`${J}${r}`, esc(m.rmse.code), 'RMSE');
+    } else {
+      els.traceTitle.textContent = 'Row 1, the headers';
+      els.traceSub.textContent = 'Column names from your file. The formulas start in row 2.';
+      for (let c = 0; c < 3; c++) add(`${col(c)}1`, esc(exact(m.cell(1, c).v)), '');
+    }
+    els.trace.innerHTML = items.join('');
+  }
+
+  /* ---------- formulas + rules ---------- */
+  const SPLIT_C2 = '=TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(C2,"[",""),"]","")," ",""),",",,1)';
+  const SPLIT_A2 = '=TEXTSPLIT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(A2,"[",""),"]","")," ",""),",",,1)';
+  function renderNotes() {
+    const m = state.model;
+    // Before a file is loaded the table shows the workbook layout, with n for the last data row.
+    const C = m ? m.C : { X0: 3, P0: 6, ABS: 7, DIFF: 8, SQ: 9 };
+    const L = m ? String(m.lastRow) : 'n';
+    const S = m ? String(m.sumRow) : '(n+1)';
+    const H = col(C.ABS);
+    const G = col(C.P0);
+    const J = col(C.SQ);
+    const rng = (c1, c2) => (c1 === c2 ? `${col(c1)}2:${col(c1)}${L}` : `${col(c1)}2:${col(c2)}${L}`);
+    const f2 = (c, fallback) => (m ? m.cell(2, c).formula || '' : fallback);
+    const N = m ? m.N : 3;
+    const rows = [
+      [`A2:C${L}`, 'your data', 'Inputs: y_pred as text, y_actual as a number, X_actual as text.'],
+      [rng(C.X0, C.P0 - 1), f2(C.X0, SPLIT_C2), m
+        ? `The X_actual array as ${N} text piece${N > 1 ? 's' : ''}. One formula per row spills across the cells.`
+        : 'The X_actual array as text pieces. One formula per row spills across as many cells as the array has values, three in the workbook.'],
+      [rng(C.P0, C.ABS - 1), f2(C.P0, SPLIT_A2), m && m.K > 1 ? `y_pred as ${m.K} text pieces. The error columns use the first.` : 'y_pred as text.'],
+      [rng(C.ABS, C.ABS), f2(C.ABS, '=ABS(B2-G2)'), 'Absolute error.'],
+      [rng(C.DIFF, C.DIFF), f2(C.DIFF, '=B2-G2'), 'Error, actual minus predicted.'],
+      [rng(C.SQ, C.SQ), f2(C.SQ, '=I2^2'), 'Squared error, number format 0.0000.'],
+      [`${H}${S}`, m ? m.cell(m.sumRow, C.ABS).formula : `=SUM(H2:H${L})/COUNTA(H2:H${L})`, 'MAE'],
+      [`${J}${S}`, m ? m.cell(m.sumRow, C.SQ).formula : `=SQRT(SUM(J2:J${L})/COUNTA(J2:J${L}))`, 'RMSE'],
+    ];
+    els.ftable.innerHTML = rows.map(([a, f, d]) => `<tr><td>${a}</td><td>${esc(f)}</td><td>${esc(d)}</td></tr>`).join('');
+    els.ftableSub.textContent = m
+      ? 'The same formulas as the workbook. Row numbers follow the file you imported.'
+      : 'The same formulas as the workbook. Here n is the last data row; the real row numbers appear when you import a file.';
+
+    // Rules, with this file's own numbers where Excel's results are available
+    const ab = m ? state.ablation : null;
+    let ex = null;
+    for (let i = 0; m && i < m.n && !ex; i++) {
+      const t = m.ev.pTok[i];
+      if (Array.isArray(t) && sigDigits(t[0]) > 15) ex = { r: i + 2, t: t[0], v: XL.toNum(t[0]) };
+    }
+    const items = [];
+    let r1 = 'TEXTSPLIT returns text, such as <span class="num">"12.345678901234567"</span>. When a formula does arithmetic with it, Excel keeps the first 15 significant digits and drops the rest, so it becomes <span class="num">12.3456789012345</span>. Reading the full text instead changes many results in their last digits.';
+    if (ex) r1 = `TEXTSPLIT returns text, so ${G}${ex.r} holds <span class="num">"${esc(ex.t)}"</span>. For <code>B${ex.r}-${G}${ex.r}</code> Excel keeps the first 15 significant digits and drops the rest, giving <span class="num">${esc(XL.full(ex.v))}</span>.`;
+    if (ab) {
+      r1 += ` Reading the full text instead matches Excel in only <span class="num">${fmtInt(ab.rowsPlainOk)} of ${fmtInt(ab.rowsTotal)}</span> rows`;
+      if (!XL.isErr(ab.plainMae) && !XL.isErr(m.mae) && XL.general15(ab.plainMae) !== XL.general15(m.mae)) {
+        r1 += ` and shows MAE as <span class="num">${esc(XL.general15(ab.plainMae))}</span> instead of <span class="num">${esc(XL.general15(m.mae))}</span>`;
+      }
+      r1 += '.';
+    }
+    items.push(['Text becomes a number with 15 significant digits', r1]);
+    let r2 = `Excel works out <code>${col(C.DIFF)}2^2</code> in 80-bit precision and then stores a 64-bit number. When the 80-bit result falls exactly halfway between two 64-bit numbers, Excel keeps the even one, so a plain multiply can be one step off in the last binary digit.`;
+    if (ab) {
+      const miss = ab.sqTotal - ab.sqOk;
+      r2 += miss
+        ? ` In this file that happens in <span class="num">${fmtInt(miss)} of ${fmtInt(ab.sqTotal)}</span> cells of ${J}. The page rounds the same way.`
+        : ` No cell in ${J} of this file is affected.`;
+    }
+    items.push(['Squares are rounded twice', r2]);
+    items.push(['Sums run top to bottom', `<code>SUM</code> adds ${H}2:${H}${L} in order with 64-bit numbers, and <code>COUNTA</code> counts ${m ? `all ${fmtInt(m.n)}` : 'every one of the'} formula cells. A more accurate summation method would change the last digits of the stored MAE, so the page adds in the same order Excel does.`]);
+    items.push(['Display changes only how numbers look', 'Excel format shows General cells with up to 15 significant digits, the most Excel shows in a cell, and column ' + J + ' in its 0.0000 format. Full precision shows the exact stored value, the shortest decimal that reads back as the same number.']);
+    els.rules.innerHTML = items.map(([t, b]) => `<li><b>${esc(t)}</b><p>${b}</p></li>`).join('');
+  }
+
+  /* ---------- ledger + sources ---------- */
+  function setBig(el, v) {
+    el.classList.remove('blank');
+    el.classList.toggle('err', XL.isErr(v));
+    el.textContent = XL.isErr(v) ? v.code : showNum(v);
+  }
+  function renderLedger() {
+    const m = state.model;
+    const { C } = m;
+    const sAbs = addr(m.sumRow, C.ABS);
+    const sSq = addr(m.sumRow, C.SQ);
+    els.maeAddr.textContent = sAbs;
+    els.rmseAddr.textContent = sSq;
+    setBig(els.maeVal, m.mae);
+    setBig(els.rmseVal, m.rmse);
+    els.maeF.textContent = m.cell(m.sumRow, C.ABS).formula;
+    els.rmseF.textContent = m.cell(m.sumRow, C.SQ).formula;
+    const saved = (a, el) => {
+      const s = refValue(a);
+      if (!s) { el.innerHTML = ''; return; }
+      const same = !m.verify.diffs.has(a);
+      el.innerHTML = `Excel saved ${esc(XL.isErr(s.v) ? s.v.code : typeof s.v === 'number' ? showNum(s.v) : exact(s.v))} <span class="mark ${same ? 'ok' : 'bad'}">${same ? 'identical' : 'differs'}</span>`;
+    };
+    saved(sAbs, els.maeSaved);
+    saved(sSq, els.rmseSaved);
+    els.rowsAddr.textContent = `COUNTA(${col(C.ABS)}2:${col(C.ABS)}${m.lastRow})`;
+    els.rowsVal.classList.remove('blank');
+    els.rowsVal.textContent = fmtInt(m.n);
+    els.rowsF.textContent = `Rows 2 to ${fmtInt(m.lastRow)} · X arrays of ${m.N} value${m.N > 1 ? 's' : ''}`
+      + (m.K > 1 ? ` · y_pred arrays of ${m.K}` : '');
+
+    const v = m.verify;
+    const st = els.checkState;
+    st.classList.remove('ok', 'bad', 'none');
+    els.checkBtn.hidden = true;
+    if (!v) {
+      st.classList.add('none');
+      els.checkText.textContent = 'Not compared';
+      els.checkMeta.textContent = 'This file has no results saved by Excel. Add the Excel-calculated workbook to check every cell.';
+      els.checkBtn.hidden = false;
+    } else if (v.cells === 0) {
+      st.classList.add('none');
+      els.checkText.textContent = 'Not compared';
+      els.checkMeta.textContent = 'The comparison workbook has no values in the formula columns.';
+      els.checkBtn.hidden = false;
+    } else if (v.diffs.size === 0) {
+      st.classList.add('ok');
+      els.checkText.textContent = 'Identical';
+      const both = refValue(sAbs) && refValue(sSq);
+      els.checkMeta.textContent = `All ${fmtInt(v.cells)} computed cells match Excel's saved values bit for bit${both ? ', MAE and RMSE included' : ''}.`
+        + (v.missing ? ` ${fmtInt(v.missing)} cells had no saved value to compare.` : '');
+    } else {
+      st.classList.add('bad');
+      els.checkText.textContent = v.diffs.size === 1 ? '1 cell differs' : `${fmtInt(v.diffs.size)} cells differ`;
+      els.checkMeta.textContent = `In ${fmtInt(v.diffRows.size)} row${v.diffRows.size > 1 ? 's' : ''}, out of ${fmtInt(v.cells)} cells compared. Tick “Only rows that differ” to see them.`;
+    }
+    els.onlyDiffWrap.hidden = !(v && v.diffs.size);
+  }
+  function renderSources() {
+    const d = state.data;
+    const m = state.model;
+    const info = d.info;
+    els.dataName.textContent = info.fileName;
+    els.dataMeta.textContent = `sheet “${info.sheet}” · ${fmtInt(m.n)} rows`;
+    els.dataTag.textContent = '';
+    const ref = m.ref;
+    if (!ref) els.refName.textContent = 'no Excel results yet';
+    else if (ref.external) els.refName.textContent = ref.source;
+    else els.refName.textContent = 'results Excel saved in this file';
+    let meta = '';
+    if (ref && ref.external && m.verify && m.verify.inputDiffRows) {
+      meta = `${fmtInt(m.verify.inputDiffRows)} rows have different inputs from the data file`;
+    }
+    els.refMeta.textContent = meta;
+    els.refClear.hidden = !state.extRef;
+
+    const notes = [];
+    if (info.byHeader && !info.standard) {
+      notes.push(`Found y_pred, y_actual and X_actual in columns ${info.map.map(col).join(', ')}, and placed them in A, B and C as in the workbook.`);
+    } else if (!info.byHeader) {
+      notes.push('Row 1 has no y_pred, y_actual and X_actual headers, so columns A, B and C are read as those inputs.');
+    }
+    if (info.kind === 'csv') notes.push('CSV numbers are read the way Excel opens a CSV, keeping 15 significant digits.');
+    let errRows = 0;
+    let firstErr = 0;
+    for (let i = 0; i < m.n; i++) {
+      if (XL.isErr(m.ev.H[i])) { errRows++; if (!firstErr) firstErr = i + 2; }
+    }
+    let html = notes.map(esc).join(' ');
+    if (errRows) {
+      html += `${html ? ' ' : ''}${fmtInt(errRows)} row${errRows > 1 ? 's' : ''} return an error in the formula columns, so the summary row shows that error as Excel would. <button class="linkbtn" type="button" data-goto="${firstErr}">Go to row ${firstErr}</button>`;
+    }
+    if (ref && ref.external && m.verify && m.verify.inputDiffRows) {
+      html += `${html ? ' ' : ''}The comparison workbook holds different input values in ${fmtInt(m.verify.inputDiffRows)} rows, so differences there are expected.`;
+    }
+    els.notice.innerHTML = html;
+    els.notice.classList.toggle('bad', errRows > 0);
+    els.notice.hidden = !html;
+  }
+
+  function renderModeButtons() {
+    els.modeExcel.setAttribute('aria-checked', String(state.mode === 'excel'));
+    els.modeFull.setAttribute('aria-checked', String(state.mode === 'full'));
+  }
+  function renderAll() {
+    els.namebox.disabled = false;
+    els.emptyErr.hidden = true;
+    renderSources();
+    renderLedger();
+    renderSheet();
+    renderFormulaBar();
+    renderTrace();
+    renderNotes();
+    renderModeButtons();
+    updateExport();
+  }
+
+  /* ---------- empty page, before any file is imported ---------- */
+  const TEMPLATE_CAPS = ['y_pred', 'y_actual', 'X_actual', 'X_actual 1/3', 'X_actual 2/3', 'X_actual 3/3', 'y_pred', '|error|', 'error', 'error²'];
+  function renderHeadTemplate() {
+    const widths = [46];
+    for (const cap of TEMPLATE_CAPS) widths.push(Math.ceil(Math.max(12, cap.length + 4) * charW + 20));
+    const lefts = [0];
+    for (let i = 0; i < widths.length; i++) lefts.push(lefts[i] + widths[i]);
+    state.widths = widths;
+    state.lefts = lefts;
+    els.sheet.style.setProperty('--cols', widths.map((w) => w + 'px').join(' '));
+    els.sheet.style.width = lefts[lefts.length - 1] + 'px';
+    let h = '<div class="corner" role="columnheader"></div>';
+    TEMPLATE_CAPS.forEach((cap, c) => {
+      h += `<div role="columnheader"><span class="letter">${col(c)}${c >= 3 ? ' <i>fx</i>' : ''}</span><span class="cap">${esc(cap)}</span></div>`;
+    });
+    els.chead.innerHTML = h;
+  }
+  function renderEmpty(errMsg) {
+    state.model = null;
+    state.data = null;
+    state.viewRows = null;
+    state.onlyDiff = false;
+    els.onlyDiff.checked = false;
+    els.dataName.textContent = 'none yet';
+    els.dataMeta.textContent = '';
+    els.dataTag.textContent = '';
+    els.refName.textContent = state.extRef ? state.extRef.source : 'nothing yet';
+    els.refMeta.textContent = state.extRef ? 'used once you import the data' : '';
+    els.refClear.hidden = !state.extRef;
+    els.notice.hidden = true;
+    const blank = (el) => { el.textContent = '—'; el.classList.add('blank'); el.classList.remove('err'); };
+    els.maeAddr.textContent = 'H, row n+1';
+    els.rmseAddr.textContent = 'J, row n+1';
+    blank(els.maeVal);
+    blank(els.rmseVal);
+    blank(els.rowsVal);
+    els.maeF.textContent = '=SUM(H2:Hn)/COUNTA(H2:Hn)';
+    els.rmseF.textContent = '=SQRT(SUM(J2:Jn)/COUNTA(J2:Jn))';
+    els.maeSaved.textContent = '';
+    els.rmseSaved.textContent = '';
+    els.rowsAddr.textContent = 'COUNTA(H2:Hn)';
+    els.rowsF.textContent = 'n is the last data row of the file you import';
+    els.checkState.classList.remove('ok', 'bad');
+    els.checkState.classList.add('none');
+    els.checkText.textContent = 'Not compared';
+    els.checkMeta.textContent = state.extRef
+      ? `Ready to compare with ${state.extRef.source} once you import the just-data file.`
+      : 'Import a just-data file first. If it has no results saved by Excel, add the Excel-calculated workbook to check every cell.';
+    els.checkBtn.hidden = true;
+    els.namebox.value = '';
+    els.namebox.disabled = true;
+    els.ftext.textContent = '';
+    els.ftext.classList.remove('ghost');
+    els.fvalue.innerHTML = '<span><span class="k">Value</span>no data yet</span>';
+    els.onlyDiffWrap.hidden = true;
+    renderHeadTemplate();
+    els.sbody.style.height = '0px';
+    els.win.innerHTML = '';
+    state.win = { first: -1, last: -1 };
+    els.selbox.hidden = true;
+    els.spillbox.hidden = true;
+    els.sheetEmpty.hidden = false;
+    els.emptyErr.textContent = errMsg || '';
+    els.emptyErr.hidden = !errMsg;
+    els.traceTitle.textContent = 'Step by step';
+    els.traceSub.textContent = 'After you import a file, select any cell to see how Excel arrives at its row: the arrays split into text, the text read as a number, the error, its size and its square.';
+    els.trace.innerHTML = '';
+    renderNotes();
+    renderModeButtons();
+    updateExport();
+  }
+
+  function rebuild() {
+    const d = state.data;
+    const ref = state.extRef || d.ref;
+    const first = !state.model;
+    state.model = Sheet.build(d.input, ref);
+    state.ablation = ref ? Sheet.ablation(d.input, ref, state.model) : null;
+    const m = state.model;
+    const { r, c } = state.sel;
+    // Open on the TEXTSPLIT spill anchor of row 2, so the split is visible straight away
+    if (first || r > m.sumRow || c >= m.ncols) state.sel = { r: Math.min(2, m.sumRow), c: m.C.X0 };
+    computeView();
+    layoutColumns();
+    renderAll();
+  }
+
+  /* ---------- loading files ---------- */
+  function explain(e, name) {
+    const code = e && e.message;
+    if (code === 'xls') return `${name} is an older .xls workbook. Save it as .xlsx or .csv in Excel, then import it again.`;
+    if (code === 'no-inflate') return 'This browser cannot unpack .xlsx files. Use a current Chrome, Edge, Firefox or Safari, or import a .csv.';
+    if (code === 'no-rows') return `${name} has no data rows below row 1.`;
+    if (code === 'empty') return `${name} has no sheet with data.`;
+    if (['not-zip', 'bad-zip', 'not-xlsx', 'zip-method', 'bad-xml'].includes(code)) return `${name} is not a readable .xlsx workbook. Import an .xlsx, .xlsm or .csv file.`;
+    return `Could not read ${name}: ${code || e}.`;
+  }
+  async function loadData(name, bytes) {
+    try {
+      const book = await Book.read(name, bytes);
+      const data = Book.toInput(book, name);
+      if (!data.input.rows.length) throw new Error('no-rows');
+      state.data = data;
+      rebuild();
+      toast(`Imported ${fmtInt(data.input.rows.length)} rows from ${name}`);
+    } catch (e) {
+      console.error(e);
+      if (!state.model) renderEmpty(explain(e, name));
+      toast(explain(e, name), 6000);
+    }
+  }
+  async function loadRef(name, bytes) {
+    try {
+      const book = await Book.read(name, bytes);
+      state.extRef = Book.toReference(book, name);
+      if (!state.data) {
+        renderEmpty();
+        toast(`${name} is ready. Import the just-data file next.`);
+        return;
+      }
+      rebuild();
+      const v = state.model.verify;
+      toast(v && v.cells ? `Compared ${fmtInt(v.cells)} cells with ${name}` : `${name} has no values in the formula columns`);
+    } catch (e) {
+      console.error(e);
+      toast(explain(e, name), 6000);
+    }
+  }
+  async function readFile(file, as) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (as === 'ref') return loadRef(file.name, bytes);
+    return loadData(file.name, bytes);
+  }
+
+  /* ---------- export ---------- */
+  const inViewer = !!(window.claude && typeof window.claude.use === 'function');
+  let downloads = null;
+  function csvText() {
+    const m = state.model;
+    const lines = [];
+    for (let r = 1; r <= m.sumRow; r++) {
+      const out = [];
+      for (let c = 0; c < m.ncols; c++) {
+        let s = show(m.cell(r, c));
+        if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+        out.push(s);
+      }
+      lines.push(out.join(','));
+    }
+    return lines.join('\r\n') + '\r\n';
+  }
+  async function exportCsv() {
+    if (!state.model) return;
+    const base = state.data.info.fileName.replace(/\.[^.]+$/, '');
+    const filename = `${base}_computed${state.mode === 'full' ? '_full' : ''}.csv`;
+    const text = csvText();
+    if (downloads) {
+      try {
+        await downloads.save({ filename, data: text });
+        toast(`Saved ${filename}`);
+      } catch (e) {
+        const code = e && e.code;
+        if (code === 'declined') toast('Export cancelled');
+        else if (code === 'rate_limited') toast('A save prompt is already open');
+        else if (code === 'too_large') toast('The file is too large to save from here');
+        else {
+          toast('Saving files is not available in this view');
+          downloads = null;
+          exportBlocked = true;
+          updateExport();
+        }
+      }
+      return;
+    }
+    if (!inViewer) {
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast(`Saved ${filename}`);
+    }
+  }
+  let exportBlocked = false;
+  // Export shows once there is data, and inside the viewer only when saving is allowed.
+  function updateExport() {
+    els.exportBtn.hidden = !(state.model && !exportBlocked && (downloads || !inViewer));
+  }
+  if (inViewer) {
+    window.claude.use('downloads').then((d) => {
+      downloads = d;
+      updateExport();
+    }).catch(() => { downloads = null; updateExport(); });
+  }
+
+  /* ---------- toast ---------- */
+  let toastTimer = 0;
+  function toast(msg, ms = 2600) {
+    els.toast.textContent = msg;
+    els.toast.hidden = false;
+    els.toast.style.opacity = '1';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      els.toast.style.opacity = '0';
+      setTimeout(() => { els.toast.hidden = true; }, 220);
+    }, ms);
+  }
+
+  /* ---------- events ---------- */
+  els.importBtn.addEventListener('click', () => els.fileData.click());
+  els.emptyImport.addEventListener('click', () => els.fileData.click());
+  els.compareBtn.addEventListener('click', () => els.fileRef.click());
+  els.emptyCompare.addEventListener('click', () => els.fileRef.click());
+  els.checkBtn.addEventListener('click', () => els.fileRef.click());
+  els.fileData.addEventListener('change', () => {
+    const f = els.fileData.files[0];
+    if (f) readFile(f, 'data');
+    els.fileData.value = '';
+  });
+  els.fileRef.addEventListener('change', () => {
+    const f = els.fileRef.files[0];
+    if (f) readFile(f, 'ref');
+    els.fileRef.value = '';
+  });
+  els.refClear.addEventListener('click', () => {
+    state.extRef = null;
+    if (state.data) rebuild();
+    else renderEmpty();
+    toast('Comparison workbook removed');
+  });
+  els.notice.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-goto]');
+    if (b) {
+      select(+b.dataset.goto, state.model.C.ABS, true);
+      els.scroll.focus({ preventScroll: true });
+    }
+  });
+  const setMode = (mode) => {
+    if (mode === state.mode) return;
+    state.mode = mode;
+    try { localStorage.setItem('l4wb.mode', mode); } catch (e) { /* ignore */ }
+    if (!state.model) { renderModeButtons(); return; }
+    layoutColumns();
+    renderAll();
+  };
+  els.modeExcel.addEventListener('click', () => setMode('excel'));
+  els.modeFull.addEventListener('click', () => setMode('full'));
+  els.onlyDiff.addEventListener('change', () => {
+    state.onlyDiff = els.onlyDiff.checked;
+    computeView();
+    els.scroll.scrollTop = 0;
+    renderSheet();
+    if (state.viewRows) {
+      // land on the first cell that differs
+      let best = null;
+      for (const d of state.model.verify.diffs.values()) {
+        if (!best || d.r < best.r || (d.r === best.r && d.c < best.c)) best = d;
+      }
+      if (best) select(best.r, best.c, true);
+    } else select(state.sel.r, state.sel.c, true);
+  });
+  els.exportBtn.addEventListener('click', exportCsv);
+
+  let raf = 0;
+  els.scroll.addEventListener('scroll', () => {
+    if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderWindow(false); });
+  }, { passive: true });
+  window.addEventListener('resize', () => { if (state.model) renderWindow(true); });
+
+  els.win.addEventListener('mousedown', (e) => {
+    const rowEl = e.target.closest('.row');
+    if (!rowEl) return;
+    const cellEl = e.target.closest('[data-c]');
+    select(+rowEl.dataset.r, cellEl ? +cellEl.dataset.c : state.sel.c, false);
+  });
+  els.chead.addEventListener('mousedown', (e) => {
+    const h = e.target.closest('[data-c]');
+    if (h && state.model) select(state.sel.r, +h.dataset.c, true);
+  });
+  els.scroll.addEventListener('keydown', (e) => {
+    const m = state.model;
+    if (!m) return;
+    let i = indexOf(state.sel.r);
+    let { c } = state.sel;
+    const count = viewCount();
+    const page = Math.max(1, Math.floor((els.scroll.clientHeight - HEAD) / RH) - 1);
+    const mod = e.ctrlKey || e.metaKey;
+    switch (e.key) {
+      case 'ArrowDown': i = mod ? count - 1 : i + 1; break;
+      case 'ArrowUp': i = mod ? 0 : i - 1; break;
+      case 'ArrowRight': c = mod ? m.ncols - 1 : c + 1; break;
+      case 'ArrowLeft': c = mod ? 0 : c - 1; break;
+      case 'PageDown': i += page; break;
+      case 'PageUp': i -= page; break;
+      case 'Home': c = 0; if (mod) i = 0; break;
+      case 'End': c = m.ncols - 1; if (mod) i = count - 1; break;
+      case 'Enter': i += e.shiftKey ? -1 : 1; break;
+      default: return;
+    }
+    e.preventDefault();
+    i = Math.max(0, Math.min(count - 1, i < 0 ? 0 : i));
+    select(rowAt(i), c, true);
+  });
+  document.addEventListener('copy', (e) => {
+    if (document.activeElement !== els.scroll || !state.model || !e.clipboardData) return;
+    const { r, c } = state.sel;
+    e.clipboardData.setData('text/plain', show(state.model.cell(r, c)));
+    e.preventDefault();
+    toast(`Copied ${addr(r, c)}`);
+  });
+  els.namebox.addEventListener('focus', () => els.namebox.select());
+  els.namebox.addEventListener('keydown', (e) => {
+    const m = state.model;
+    if (!m) return;
+    if (e.key === 'Escape') {
+      els.namebox.value = addr(state.sel.r, state.sel.c);
+      els.scroll.focus({ preventScroll: true });
+      return;
+    }
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const text = els.namebox.value.trim().toUpperCase();
+    let target = null;
+    if (text === 'MAE') target = { r: m.sumRow, c: m.C.ABS };
+    else if (text === 'RMSE') target = { r: m.sumRow, c: m.C.SQ };
+    else {
+      const a = Sheet.parseAddress(text);
+      if (a) target = { r: a.r, c: a.c < 0 ? state.sel.c : a.c };
+    }
+    if (!target) {
+      toast('Type a cell such as H2, a row number, MAE or RMSE');
+      return;
+    }
+    if (state.viewRows && !state.viewRows.includes(target.r)) {
+      state.onlyDiff = false;
+      computeView();
+      renderSheet();
+    }
+    select(target.r, target.c, true);
+    els.scroll.focus({ preventScroll: true });
+  });
+
+  /* drag and drop anywhere */
+  const hasFiles = (e) => !!(e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files'));
+  let depth = 0;
+  window.addEventListener('dragenter', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    depth++;
+    els.drop.hidden = false;
+  });
+  window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener('dragleave', (e) => {
+    if (!hasFiles(e)) return;
+    depth = Math.max(0, depth - 1);
+    if (!depth) els.drop.hidden = true;
+  });
+  window.addEventListener('drop', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    depth = 0;
+    els.drop.hidden = true;
+    const f = e.dataTransfer.files[0];
+    if (f) readFile(f, 'data');
+  });
+
+  /* ---------- start empty: no data is stored in the page ---------- */
+  measureChar();
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      const before = charW;
+      measureChar();
+      if (Math.abs(before - charW) <= 0.05) return;
+      if (state.model) { layoutColumns(); renderSheet(); } else renderHeadTemplate();
+    });
+  }
+  renderEmpty();
+
+  // test hook
+  window.__l4 = { state, select, csvText, show };
+})();
+
+</script>
+
+</body>
+</html>
