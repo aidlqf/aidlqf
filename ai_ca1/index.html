@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A click-by-click Excel manual for the backpropagation computational assessment: initial round, rounds 1–3, comparison sheet, checks, and troubleshooting.">
+  <title>Backpropagation Excel Lab — Operation Manual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to manual</a>
+  <div class="mobile-bar">
+    <button id="menu-open" class="icon-button" aria-label="Open manual menu" aria-controls="sidebar" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <span>Backpropagation Excel Lab</span>
+    <button class="icon-button" id="mobile-print" aria-label="Print manual">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/></svg>
+    </button>
+  </div>
+  <div id="menu-backdrop" class="menu-backdrop" hidden></div>
+  <aside id="sidebar" class="sidebar" aria-label="Manual navigation">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">∂</span>
+      <div><strong>Backpropagation</strong><span>Excel operation manual</span></div>
+      <button id="menu-close" class="icon-button menu-close" aria-label="Close manual menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <nav class="primary-nav" aria-label="Manual views">
+      <button class="nav-item active" data-view="overview"><span>Overview</span><span class="nav-symbol">⌂</span></button>
+      <button class="nav-item" data-view="guide"><span>Guided steps</span><span id="nav-step-count">0 / 0</span></button>
+      <button class="nav-item" data-view="formulas"><span>Formula library</span><span class="nav-symbol">fx</span></button>
+      <button class="nav-item" data-view="answers"><span>Answer key</span><span class="nav-symbol">✓</span></button>
+      <button class="nav-item" data-view="help"><span>Troubleshooting</span><span class="nav-symbol">?</span></button>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <div class="chapter-label">CHAPTERS</div>
+    <div id="chapter-nav" class="chapter-nav"></div>
+    <div class="sidebar-bottom">
+      <div class="progress-copy"><span>Your progress</span><strong id="progress-percent">0%</strong></div>
+      <div class="progress-track" aria-hidden="true"><div id="progress-bar"></div></div>
+      <p id="progress-detail">No steps completed yet</p>
+      <button id="reset-progress" class="text-button">Reset progress</button>
+    </div>
+  </aside>
+
+  <main id="main-content" class="main-content">
+    <section id="view-overview" class="view active-view" aria-labelledby="overview-title">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="kicker">COMPUTATIONAL ASSESSMENT 1 · EXCEL LAB</p>
+          <h1 id="overview-title">One calculation.<br>One cell at a time.</h1>
+          <p class="hero-intro">A complete operation manual for the initial backpropagation round, training rounds 1–3, and the comparison sheet. Follow in order, enter the formula shown, and check your result before moving on.</p>
+          <div class="hero-actions">
+            <button id="start-guide" class="button primary">Start guided manual <span aria-hidden="true">→</span></button>
+            <button id="overview-print" class="button secondary">Print / save PDF</button>
+          </div>
+          <div class="hero-meta"><span id="total-steps-meta">Step-by-step</span><span>6 worksheets</span><span>Answers included</span></div>
+        </div>
+        <div class="network-panel" aria-label="Neural network with two inputs, two hidden neurons, and two outputs">
+          <svg class="network" viewBox="0 0 480 360" role="img" aria-labelledby="network-title network-desc">
+            <title id="network-title">2–2–2 neural network</title>
+            <desc id="network-desc">Inputs 0.05 and 0.10 feed hidden neurons h1 and h2, which feed outputs o1 and o2.</desc>
+            <g class="edges">
+              <path d="M82 100 238 72M82 100 238 256M82 256 238 72M82 256 238 256M258 72 400 100M258 72 400 256M258 256 400 100M258 256 400 256"/>
+            </g>
+            <g class="node input-node"><circle cx="70" cy="100" r="34"/><circle cx="70" cy="256" r="34"/></g>
+            <g class="node hidden-node"><circle cx="248" cy="72" r="38"/><circle cx="248" cy="256" r="38"/></g>
+            <g class="node output-node"><circle cx="412" cy="100" r="34"/><circle cx="412" cy="256" r="34"/></g>
+            <g class="node-text">
+              <text x="70" y="96">i1</text><text class="node-value" x="70" y="116">0.05</text>
+              <text x="70" y="252">i2</text><text class="node-value" x="70" y="272">0.10</text>
+              <text class="hidden-label" x="248" y="69">h1</text><text class="node-value hidden-label" x="248" y="91">sigmoid</text>
+              <text class="hidden-label" x="248" y="253">h2</text><text class="node-value hidden-label" x="248" y="275">sigmoid</text>
+              <text x="412" y="96">o1</text><text class="node-value" x="412" y="116">target .01</text>
+              <text x="412" y="252">o2</text><text class="node-value" x="412" y="272">target .99</text>
+            </g>
+            <g class="layer-text"><text x="70" y="330">INPUT</text><text x="248" y="330">HIDDEN</text><text x="412" y="330">OUTPUT</text></g>
+          </svg>
+          <div class="eta-note"><span>Learning rate</span><strong>η = 0.5</strong></div>
+        </div>
+      </div>
+
+      <div class="notice"><strong>Before you begin</strong><p>The supplied workbook contains formulas. Follow the guide to enter or audit each cell. In rounds 1–3, only copy the updated weights; the remaining formulas are already present. Small differences in the last decimal are normally caused by display rounding.</p></div>
+
+      <section class="overview-section" aria-labelledby="route-title">
+        <div class="section-heading"><span>01</span><h2 id="route-title">Your route through the workbook</h2></div>
+        <div id="overview-chapters" class="route-list"></div>
+      </section>
+
+      <section class="overview-section two-column-section" aria-labelledby="rules-title">
+        <div>
+          <div class="section-heading"><span>02</span><h2 id="rules-title">Excel rules used throughout</h2></div>
+          <ul class="rule-list">
+            <li><strong>Start formulas with =</strong><span>Excel treats the entry as text without it.</span></li>
+            <li><strong>Press Enter after every entry</strong><span>Then click the cell again to compare the result.</span></li>
+            <li><strong>Keep sheet names exact</strong><span>Use <code>initial</code>, <code>round1</code>, <code>round2</code>, and <code>round3</code>.</span></li>
+            <li><strong>Do not round inside formulas</strong><span>Excel keeps full precision even when cells show fewer digits.</span></li>
+          </ul>
+        </div>
+        <div class="legend-panel">
+          <h3>Cell roles</h3>
+          <dl><div><dt class="legend-input">Input</dt><dd>Constants you type once</dd></div><div><dt class="legend-forward">Forward</dt><dd>Net inputs, activations, predictions</dd></div><div><dt class="legend-back">Backward</dt><dd>Derivatives and gradients</dd></div><div><dt class="legend-update">Update</dt><dd>New weights for the next round</dd></div></dl>
+          <p>Your checklist is stored only in this browser. It does not sync to another device, and clearing browser data resets it.</p>
+        </div>
+      </section>
+    </section>
+
+    <section id="view-guide" class="view" aria-labelledby="guide-view-title">
+      <div class="view-topline"><div><p class="kicker">GUIDED MANUAL</p><h1 id="guide-view-title">Complete each operation in order</h1></div><button class="button secondary compact" id="guide-print">Print all steps</button></div>
+      <div class="guide-layout">
+        <aside class="step-index-panel" aria-label="Step index"><label for="step-search">Find a step, cell, or formula</label><div class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="step-search" type="search" placeholder="e.g. Q17 or sigmoid"></div><div id="step-index" class="step-index"></div></aside>
+        <div class="step-stage">
+          <article id="step-card" class="step-card" aria-live="polite"></article>
+          <div class="step-navigation"><button id="previous-step" class="button secondary">← Previous</button><button id="complete-step" class="button primary">Mark complete &amp; continue →</button></div>
+          <p class="keyboard-hint">Keyboard: <kbd>Alt</kbd> + <kbd>←</kbd> previous · <kbd>Alt</kbd> + <kbd>→</kbd> next</p>
+        </div>
+      </div>
+      <section class="all-steps-section"><button id="toggle-all-steps" class="text-toggle" aria-expanded="false" aria-controls="all-steps">Show all steps on one page <span>↓</span></button><div id="all-steps" hidden></div></section>
+    </section>
+
+    <section id="view-formulas" class="view" aria-labelledby="formula-title">
+      <div class="view-topline"><div><p class="kicker">QUICK REFERENCE</p><h1 id="formula-title">Formula library</h1><p>Search every formula used in the guided route. Select a row to jump to its instructions.</p></div></div>
+      <div class="library-tools"><div class="search-field wide"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="formula-search" type="search" placeholder="Search sheet, cell, formula, or purpose"></div><label class="select-label">Sheet <select id="formula-sheet"><option value="all">All sheets</option><option>initial</option><option>round1</option><option>round2</option><option>round3</option><option>Sheet1</option></select></label></div>
+      <div id="formula-results" class="formula-results"></div>
+    </section>
+
+    <section id="view-answers" class="view" aria-labelledby="answers-title">
+      <div class="view-topline"><div><p class="kicker">CHECK YOUR WORK</p><h1 id="answers-title">Answer key</h1><p>Values are shown to 9 decimal places. Your cells may display fewer digits; compare the underlying values when checking.</p></div><button id="answers-print" class="button secondary compact">Print answer key</button></div>
+      <div id="answer-content"></div>
+    </section>
+
+    <section id="view-help" class="view" aria-labelledby="help-title">
+      <div class="view-topline"><div><p class="kicker">WHEN SOMETHING LOOKS WRONG</p><h1 id="help-title">Troubleshooting</h1><p>Diagnose the cell first. Do not fix an error by typing the expected number over a formula.</p></div></div>
+      <div class="trouble-list">
+        <details open><summary>My formula appears as text instead of calculating</summary><div><p>Check that the entry begins with <code>=</code>. Click the cell, press <kbd>F2</kbd>, then <kbd>Enter</kbd>. If it still shows text, select the cell, choose <strong>Home → Number → General</strong>, and re-enter the formula.</p></div></details>
+        <details><summary>I see #NAME?</summary><div><p>Check <code>EXP</code> spelling and every sheet name. Use <code>initial!E23</code>, not <code>Initial!E23</code> with a missing or differently named tab. Also check for a missing <code>!</code> between sheet and cell.</p></div></details>
+        <details><summary>I see #REF!</summary><div><p>A referenced cell or sheet was deleted or a pasted formula points outside the worksheet. Undo the last deletion or paste, then restore the exact reference shown in the manual.</p></div></details>
+        <details><summary>I see #VALUE!</summary><div><p>A formula is trying to multiply or add text. Inspect every referenced cell. Retype numbers such as <code>0.05</code> without units, labels, spaces, or a leading apostrophe.</p></div></details>
+        <details><summary>The result is close but not identical</summary><div><p>First increase decimal places with <strong>Home → Increase Decimal</strong>. Differences only beyond the displayed precision are normal. If the difference is larger, check the formula rather than rounding intermediate cells.</p></div></details>
+        <details><summary>My total error is not decreasing</summary><div><p>Check the four output-layer updates in <code>M23:M26</code> and the four hidden-layer updates in <code>E23:E26</code>. Then check that the next round links to those updated cells—not back to the original constants.</p></div></details>
+        <details><summary>A round sheet uses the wrong weights</summary><div><p>The links form a chain: <code>round1 → initial</code>, <code>round2 → round1</code>, and <code>round3 → round2</code>. Inputs, targets, biases, and learning rate stay constant.</p></div></details>
+        <details><summary>Nothing recalculates after I change a cell</summary><div><p>Go to <strong>Formulas → Calculation Options → Automatic</strong>, then press <kbd>F9</kbd>. On a Mac, use <strong>Excel → Preferences → Calculation → Automatic</strong> and press <kbd>⌘</kbd> + <kbd>=</kbd> if needed.</p></div></details>
+      </div>
+      <div class="help-callout"><h2>Final self-check</h2><ol><li>All eight updated weights exist on every round sheet.</li><li><code>U8</code> decreases from initial through round3.</li><li>Predictions <code>Q17</code> and <code>Q20</code> move toward 0.01 and 0.99.</li><li>Sheet1 weight differences match the linked round sheets.</li><li>No formula has been replaced by a typed answer.</li></ol></div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
